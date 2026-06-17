@@ -1,0 +1,1337 @@
+s<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--o:#FFA94D;--od:#F08C2A;--ol:#FFD56B;--g:#7BC455;--gd:#5aa33e;--p:#FF8FAB;--pu:#B39DDB;--bg:#FFFBF5;--t:#2C2C2C;--tl:#888;--sh:0 4px 16px rgba(0,0,0,0.08)}
+body{font-family:'Noto Sans JP',sans-serif;background:#e8e0d8;display:flex;justify-content:center;padding:20px;min-height:100vh}
+@media (max-width:430px){
+  body{padding:0;background:var(--bg);display:block;}
+  .phone{width:100%;border-radius:0;box-shadow:none;overflow:hidden;}
+  .screen.active{height:100dvh;}
+}
+.phone{width:375px;background:var(--bg);border-radius:36px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.screen{display:none;flex-direction:column;min-height:700px;animation:fi 0.25s ease}
+.screen.active{display:flex;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#s-home{min-height:700px;}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.hdr{background:var(--o);padding:10px 14px 12px;flex-shrink:0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hdr-date{font-weight:900;font-size:15px;color:white}
+.hdr-r{display:flex;align-items:center;gap:6px}
+.past-btn{background:rgba(255,255,255,0.3);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:white;cursor:pointer;border:none;font-family:inherit}
+.h-icons{display:flex;gap:5px}
+.h-ico{width:26px;height:26px;background:rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+.ubar{display:flex;gap:8px}
+.ucard{background:rgba(255,255,255,0.95);border-radius:12px;padding:7px 10px;display:flex;align-items:center;gap:7px;flex:1}
+.uavt{width:26px;height:26px;background:var(--ol);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+.uname{font-size:10px;font-weight:700;color:var(--t)}
+.lvrow{display:flex;align-items:center;gap:4px;margin-top:2px}
+.lvtxt{font-size:9px;font-weight:900;color:var(--tl)}
+.lvbar{flex:1;height:5px;background:#e0e0e0;border-radius:3px;overflow:hidden}
+.lvfill{height:100%;width:30%;background:linear-gradient(90deg,var(--o),var(--ol));border-radius:3px}
+.kcal-card{background:rgba(255,255,255,0.95);border-radius:12px;padding:7px 12px;text-align:center;min-width:105px}
+.kcal-lbl{font-size:9px;font-weight:700;color:var(--tl)}
+.kcal-val{font-size:19px;font-weight:900;color:var(--t)}
+.kcal-unit{font-size:9px;color:var(--tl)}
+
+/* ホーム キャラエリア */
+.chara-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px 6px;position:relative;min-height:0;background:var(--bg);}
+.speech{background:white;border:2px solid #eee;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;color:var(--t);margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:relative;text-align:center;flex-shrink:0}
+.speech::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:white}
+
+.chara-wrap{
+  width:220px;height:260px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+  background:transparent;
+}
+
+/* Safari互換：filter:drop-shadowを使わずそのまま表示 */
+.chara-img{
+  width:100%;height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  transition:opacity 0.6s ease;
+  display:block;
+  background:transparent;
+}
+.chara-canvas{display:none;}
+
+/* 着せ替えパーツのレイヤー（キャラ本体と同じ位置・サイズで重なる） */
+.item-layer{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  pointer-events:none;
+  display:none;
+  z-index:2;
+}
+.item-layer.on{display:block;}
+
+.stage-badge{position:absolute;top:4px;right:4px;background:var(--o);color:white;font-size:10px;font-weight:900;padding:3px 8px;border-radius:20px;z-index:2}
+.sparkle{position:absolute;font-size:16px;animation:sp 2s infinite;pointer-events:none;z-index:1}
+.sparkle:nth-child(1){top:10px;right:10px;animation-delay:0s}
+.sparkle:nth-child(2){top:40px;left:5px;animation-delay:0.7s;font-size:11px}
+.sparkle:nth-child(3){bottom:10px;right:5px;animation-delay:1.4s;font-size:13px}
+@keyframes sp{0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)}}
+.change-effect{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;pointer-events:none;animation:pop 1s ease forwards;display:none;z-index:3}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}40%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+
+.btn-grid{width:100%;padding:8px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0}
+.abtn{border:none;border-radius:50px;padding:13px 10px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.12s;box-shadow:0 4px 12px rgba(0,0,0,0.12)}
+.abtn:active{transform:scale(0.95)}
+.btn-k{background:var(--p);color:white}
+.btn-m{background:var(--g);color:white}
+.btn-r{grid-column:1/-1;background:linear-gradient(135deg,var(--o),var(--od));color:white;font-size:20px;padding:16px;border-radius:50px;box-shadow:0 6px 20px rgba(255,169,77,0.45)}
+.btn-a{background:var(--ol);color:white}
+.btn-f{background:var(--pu);color:white}
+
+.shdr{background:var(--o);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.bk{background:none;border:none;color:white;font-size:22px;cursor:pointer;font-weight:700}
+.stitle{font-size:16px;font-weight:900;color:white}
+.xbtn{background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;color:white;cursor:pointer;font-weight:700}
+.sbody{flex:1;padding:14px 16px 24px;overflow-y:auto}
+.ps{width:100%;height:130px;background:linear-gradient(135deg,#f0f0f0,#e0e0e0);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:10px;border:2px dashed #ccc;overflow:hidden;cursor:pointer;flex-direction:column;gap:4px}
+.ps.has{font-size:72px;border:none;background:#f5e8d0}
+.phint{font-size:11px;font-weight:700;color:var(--tl)}
+.pb{width:100%;background:#f5f5f5;border:2px solid #e0e0e0;border-radius:12px;padding:10px;font-family:inherit;font-size:13px;font-weight:700;color:var(--tl);cursor:pointer;margin-bottom:12px}
+.lb{font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px;display:block}
+.sw{position:relative;margin-bottom:4px}
+.ti{width:100%;padding:12px 14px;border:2px solid #e8e8e8;border-radius:12px;font-family:inherit;font-size:15px;color:var(--t);background:white;outline:none;transition:border-color 0.2s}
+.ti:focus{border-color:var(--o)}
+.ti::placeholder{color:#bbb}
+.sl{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--o);border-radius:12px;box-shadow:var(--sh);z-index:20;overflow:hidden;display:none}
+.sl.show{display:block}
+.si{padding:10px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f5f5f5}
+.si:last-child{border:none}
+.si:hover{background:#FFF9F0}
+.hn{font-size:11px;color:var(--tl);margin:4px 0 12px;padding-left:2px}
+.frow{display:flex;gap:8px;margin-bottom:12px}
+.fsel{flex:1;padding:10px;border:2px solid #e8e8e8;border-radius:12px;font-family:inherit;font-size:13px;color:var(--t);background:white;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+.fsel:focus{outline:none;border-color:var(--o)}
+.anabtn{width:100%;background:linear-gradient(135deg,var(--o),var(--od));border:none;border-radius:14px;padding:14px;color:white;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 6px 20px rgba(255,169,77,0.4);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.anabtn:disabled{background:#ccc;box-shadow:none;cursor:not-allowed}
+.nfbox{background:#FFF9F0;border:2px solid var(--ol);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--od);font-weight:700;margin-bottom:10px;display:none;line-height:1.6}
+.nfbox.show{display:block}
+.rbox{background:white;border-radius:16px;overflow:hidden;box-shadow:var(--sh);margin-bottom:10px;display:none}
+.rbox.show{display:block;animation:fi 0.3s ease}
+.dish-wrap{position:relative;border-radius:16px;overflow:hidden;margin-bottom:6px;height:130px;background:#f5e8d0;display:flex;align-items:center;justify-content:center}
+.dish-emoji{font-size:72px;position:relative;z-index:1}
+.rainbow{position:absolute;inset:0;background:conic-gradient(from 0deg,rgba(255,120,120,0.2) 0%,rgba(255,200,80,0.2) 15%,rgba(120,220,120,0.2) 30%,rgba(80,180,255,0.2) 45%,rgba(180,100,255,0.2) 60%,rgba(255,100,200,0.2) 75%,rgba(255,120,120,0.2) 100%);animation:rc 4s linear infinite;mix-blend-mode:screen}
+@keyframes rc{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.dnrow{background:white;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+.dnlbl{font-size:12px;color:var(--tl)}
+.dnval{font-size:15px;font-weight:700;color:var(--t)}
+.abox{background:white;border-radius:14px;overflow:hidden;box-shadow:var(--sh);margin-bottom:10px}
+.atitle{background:#f8f8f8;padding:9px 14px;font-size:13px;font-weight:700;color:var(--t);text-align:center;border-bottom:1px solid #eee}
+.arow{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0}
+.arow:last-child{border-bottom:none}
+.aico{font-size:18px;margin-right:10px}
+.albl{font-size:13px;font-weight:500;color:var(--t);flex:1}
+.aval{font-size:14px;font-weight:700;color:var(--t)}
+.aunit{font-size:11px;color:var(--tl);margin-left:2px}
+.detbtn{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--o),var(--od));border:none;border-radius:10px;padding:11px;color:white;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;width:100%;box-shadow:0 4px 12px rgba(255,169,77,0.35);gap:6px;margin-bottom:10px}
+.ngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ncard{border-radius:14px;padding:12px 10px;text-align:center;box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;gap:2px}
+.ncard.high{background:#FFF3E0;border:2px solid #FFCC80}
+.ncard.good{background:#F1F8E9;border:2px solid #AED581}
+.ncard.std{background:#E3F2FD;border:2px solid #90CAF9}
+.nhdr{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.nico{font-size:16px}
+.nlbl{font-size:11px;font-weight:700;color:var(--tl)}
+.ntag{font-size:22px;font-weight:900;margin:4px 0 2px;line-height:1}
+.high .ntag{color:#E65100}
+.good .ntag{color:#2E7D32}
+.std .ntag{color:#1565C0}
+.nsub{font-size:12px;font-weight:700;color:var(--tl);margin-top:3px}
+.detp{display:none}
+.detp.show{display:block;animation:fi 0.25s ease}
+.cn{background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--sh);display:none;text-align:center;border:2px solid var(--ol)}
+.cn.show{display:block;animation:fi 0.3s ease}
+.cn-emoji{font-size:36px;margin-bottom:6px}
+.cn-title{font-size:15px;font-weight:900;color:var(--od);margin-bottom:4px}
+.cn-desc{font-size:12px;color:var(--t);line-height:1.6}
+
+/* Before→After */
+.ba-section{background:var(--bg);border:2px solid var(--ol);border-radius:20px;padding:16px 10px 14px;margin-bottom:12px;text-align:center}
+.ba-title{font-size:14px;font-weight:900;color:var(--od);margin-bottom:14px}
+.ba-row{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:14px}
+.ba-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:130px}
+.ba-label{font-size:11px;font-weight:700;color:var(--tl);background:rgba(255,255,255,0.8);padding:3px 12px;border-radius:20px}
+/* Before/After画像 */
+.ba-img{
+  width:120px;height:160px;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.12));
+  display:block;
+}
+.ba-canvas{display:none;}
+.ba-arrow{font-size:28px;flex-shrink:0;margin-bottom:20px;animation:pulse 1.5s infinite;color:var(--od)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.adv-box{background:white;border-radius:12px;padding:12px 14px;margin-bottom:12px;border:1px solid #e8f5e0}
+.adv-lbl{font-size:11px;font-weight:900;color:var(--gd);margin-bottom:4px}
+.adv-txt{font-size:13px;font-weight:700;color:var(--t);line-height:1.6}
+.homebtn{display:block;width:100%;background:linear-gradient(135deg,var(--o),var(--od));border:none;border-radius:12px;padding:13px;color:white;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;margin-top:4px;box-shadow:0 4px 12px rgba(255,169,77,0.35)}
+
+/* ステージデバッグ表示 */
+.debug-bar{background:#333;color:#0f0;font-size:11px;font-weight:700;padding:4px 10px;text-align:center;font-family:monospace}
+
+.reset-bar{background:var(--ol);text-align:center;padding:6px;font-size:11px;font-weight:700;color:white;cursor:pointer}
+.reset-bar:hover{background:var(--o)}
+</style></head><body>
+<div class="phone">
+<div class="reset-bar" onclick="resetAll()">🔄 デモリセット（stage5に戻す）</div>
+<div class="debug-bar" id="debug">stage: 5 | 記録数: 0</div>
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="hdr">
+    <div class="hdr-top">
+      <span style="font-size:18px">⚙️</span>
+      <span class="hdr-date">5月25日(月)</span>
+      <div class="hdr-r">
+        <button class="past-btn" onclick="showScreen('past')">🕐 過去表示</button>
+        <div class="h-icons"><div class="h-ico">🔥</div><div class="h-ico">🥗</div><div class="h-ico">💪</div></div>
+      </div>
+    </div>
+    <div class="ubar">
+      <div class="ucard">
+        <div class="uavt">👤</div>
+        <div style="flex:1">
+          <div class="uname">ユーザー名</div>
+          <div class="lvrow"><span class="lvtxt">Lv.1</span><div class="lvbar"><div class="lvfill"></div></div></div>
+        </div>
+      </div>
+      <div class="kcal-card">
+        <div class="kcal-lbl">摂取カロリー</div>
+        <div><span class="kcal-val" id="home-kcal">0</span><span class="kcal-unit">kcal</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="chara-area">
+    <div class="speech" id="speech">今日も記録しよう！</div>
+    <div class="chara-wrap">
+      <span class="sparkle">✨</span><span class="sparkle">⭐</span><span class="sparkle">✨</span>
+      <span class="stage-badge" id="stage-badge">Stage 5</span>
+      <img class="chara-img" id="chara-img" src="chara_stage5/chara_stage5_phase1.png" alt="キャラクター">
+      <img class="item-layer" id="layer-skirt" alt="">
+      <img class="item-layer" id="layer-blouse" alt="">
+      <img class="item-layer" id="layer-shoes" alt="">
+      <img class="item-layer" id="layer-hairband" alt="">
+      <canvas class="chara-canvas" id="chara-canvas"></canvas>
+      <div class="change-effect" id="change-effect">✨</div>
+    </div>
+    <button id="gender-btn" onclick="toggleGender()" style="margin-top:6px;background:white;border:2px solid var(--ol);border-radius:30px;padding:6px 16px;font-family:inherit;font-size:12px;font-weight:900;color:var(--od);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06)">👧 女の子</button>
+  </div>
+  <div class="btn-grid">
+    <button class="abtn btn-k">👗 着せ替え</button>
+    <button class="abtn btn-m" onclick="showScreen('mission')">🏆 ミッション</button>
+    <button class="abtn btn-r" onclick="showScreen('record')">🍽 記録</button>
+    <button class="abtn btn-a" onclick="showScreen('advice')">💡 アドバイス</button>
+    <button class="abtn btn-f" onclick="showScreen('follow')">👥 フォロー</button>
+  </div>
+</div>
+
+<!-- RECORD -->
+<div class="screen" id="s-record">
+  <div class="shdr">
+    <button class="bk" onclick="showScreen('home')">＜</button>
+    <span class="stitle">食事管理記録</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody">
+    <div class="ps" id="ps"><span>📷</span><span class="phint">タップして撮影</span></div>
+    <button class="pb">📸 写真を撮る / ライブラリから選ぶ</button>
+    <label class="lb">料理名 <span style="color:var(--od)">*</span></label>
+    <div class="sw">
+      <input class="ti" id="di" type="text" placeholder="例：カツカレー、ラーメン..." oninput="onIn()" onkeydown="onKey(event)" autocomplete="off">
+      <div class="sl" id="sl"></div>
+    </div>
+    <p class="hn">💡 料理名を入力すると候補が表示されます</p>
+    <div class="frow">
+      <div style="flex:1"><label class="lb">量</label>
+        <select class="fsel" id="am" onchange="reA()">
+          <option value="1.0">普通</option><option value="1.3">大盛り</option><option value="0.7">少なめ</option>
+        </select></div>
+      <div style="flex:1"><label class="lb">タイミング</label>
+        <select class="fsel" id="timing">
+          <option value="breakfast">朝食</option><option value="lunch">昼食</option><option value="dinner">夕食</option><option value="snack">間食</option>
+        </select></div>
+    </div>
+    <button class="anabtn" id="anabtn" onclick="analyze()" disabled>🔍 栄養素を分析する</button>
+    <div class="nfbox" id="nfbox">😅 この料理はまだ登録されていません。別の名前で試してみてください。</div>
+    <div class="rbox" id="rbox">
+      <div class="dish-wrap"><div class="rainbow"></div><span class="dish-emoji" id="demoji">🍛</span></div>
+      <div class="dnrow"><span class="dnlbl">料理名</span><span class="dnval" id="dname"></span></div>
+      <div class="abox">
+        <div class="atitle">AI分析結果</div>
+        <div class="arow"><span class="aico">🔥</span><span class="albl">カロリー</span><span class="aval" id="r-cal">—</span><span class="aunit">kcal</span></div>
+        <div class="arow"><span class="aico">💪</span><span class="albl">たんぱく質</span><span class="aval" id="r-prot">—</span><span class="aunit">g</span></div>
+        <div class="arow"><span class="aico">🥑</span><span class="albl">脂質</span><span class="aval" id="r-fat">—</span><span class="aunit">g</span></div>
+        <div class="arow"><span class="aico">🌾</span><span class="albl">炭水化物</span><span class="aval" id="r-carb">—</span><span class="aunit">g</span></div>
+      </div>
+      <button class="detbtn" onclick="toggleDet()">詳細をみる <span id="detarrow">›</span></button>
+      <div class="detp" id="detp">
+        <div class="ngrid">
+          <div class="ncard" id="nc-cal"><div class="nhdr"><span class="nico">🔥</span><span class="nlbl">カロリー</span></div><div class="ntag" id="nt-cal">—</div><div class="nsub" id="nv-cal">—</div></div>
+          <div class="ncard" id="nc-prot"><div class="nhdr"><span class="nico">💪</span><span class="nlbl">たんぱく質</span></div><div class="ntag" id="nt-prot">—</div><div class="nsub" id="nv-prot">—</div></div>
+          <div class="ncard" id="nc-fat"><div class="nhdr"><span class="nico">🥑</span><span class="nlbl">脂質</span></div><div class="ntag" id="nt-fat">—</div><div class="nsub" id="nv-fat">—</div></div>
+          <div class="ncard" id="nc-carb"><div class="nhdr"><span class="nico">🌾</span><span class="nlbl">炭水化物</span></div><div class="ntag" id="nt-carb">—</div><div class="nsub" id="nv-carb">—</div></div>
+        </div>
+        <div class="cn" id="cn">
+          <div class="cn-emoji" id="cn-emoji">✨</div>
+          <div class="cn-title" id="cn-title">キャラクターが変化！</div>
+          <div class="cn-desc" id="cn-desc">バランスの良い食事だね！</div>
+        </div>
+        <div class="ba-section" id="ba-section" style="display:none">
+          <div class="ba-title">🎮 キャラクターの変化</div>
+          <div class="ba-row">
+            <div class="ba-item">
+              <span class="ba-label">Before</span>
+              <img class="ba-img" id="ba-before" src="chara_stage5/chara_stage5_phase1.png" alt="before">
+              <canvas class="ba-canvas" id="ba-before-canvas"></canvas>
+            </div>
+            <div class="ba-arrow">→</div>
+            <div class="ba-item">
+              <span class="ba-label">After</span>
+              <img class="ba-img" id="ba-after" src="chara_stage5/chara_stage5_phase1.png" alt="after">
+              <canvas class="ba-canvas" id="ba-after-canvas"></canvas>
+            </div>
+          </div>
+          <div class="adv-box">
+            <div class="adv-lbl">💬 アドバイス</div>
+            <div class="adv-txt" id="adv-text">バランスの良い食事だね！この調子で続けよう♪</div>
+          </div>
+        </div>
+        <button class="homebtn" onclick="goHome()">🏠 ホームに戻る</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button id="recbtn" style="display:none;flex:1;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:12px;padding:14px;color:white;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.4)" onclick="submitRecord()">✅ この内容で記録する</button>
+      <button style="background:#f0f0f0;border:none;border-radius:12px;padding:14px 18px;color:var(--tl);font-family:inherit;font-size:18px;font-weight:900;cursor:pointer" onclick="showScreen('home')">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- MISSION -->
+<div class="screen" id="s-mission">
+  <div class="shdr" style="background:var(--gd)">
+    <div style="width:30px"></div><span class="stitle">🏆 ミッション</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody">
+    <div style="display:flex;gap:0;margin-bottom:14px;border-radius:12px;overflow:hidden;border:2px solid var(--g)">
+      <button id="tab-d" style="flex:1;padding:9px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:var(--g);color:white;border:none;font-family:inherit" onclick="switchTab('daily')">📅 Daily</button>
+      <button id="tab-w" style="flex:1;padding:9px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:white;color:var(--gd);border:none;font-family:inherit" onclick="switchTab('weekly')">📆 Weekly</button>
+    </div>
+    <div id="md">
+      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 3px 10px rgba(0,0,0,0.07);display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:#E3F2FD;display:flex;align-items:center;justify-content:center;font-size:20px">🍽</div>
+        <div style="flex:1"><span style="font-size:10px;background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:20px;font-weight:700">Daily</span><div style="font-size:13px;font-weight:700;color:var(--t);margin:4px 0 6px">ログインする</div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:#e8e8e8;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;border-radius:4px;background:var(--gd)"></div></div><span style="font-size:11px;color:var(--tl);font-weight:700">1/1</span></div></div>
+        <button style="background:linear-gradient(135deg,var(--o),var(--od));border:none;border-radius:8px;padding:6px 12px;color:white;font-family:inherit;font-size:12px;font-weight:900;cursor:pointer">GET!</button>
+      </div>
+    </div>
+    <div id="mw" style="display:none">
+      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 3px 10px rgba(0,0,0,0.07);display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:20px">📝</div>
+        <div style="flex:1"><span style="font-size:10px;background:#FFF3E0;color:#E65100;padding:2px 8px;border-radius:20px;font-weight:700">Weekly</span><div style="font-size:13px;font-weight:700;color:var(--t);margin:4px 0 6px">7日間食事記録をする</div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:#e8e8e8;border-radius:4px;overflow:hidden"><div id="mf7" style="height:100%;width:0%;border-radius:4px;background:var(--gd)"></div></div><span id="mp7" style="font-size:11px;color:var(--tl);font-weight:700">0/7</span></div></div>
+        <button id="gb7" style="background:#ccc;border:none;border-radius:8px;padding:6px 12px;color:white;font-family:inherit;font-size:12px;font-weight:900" disabled>GET!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADVICE -->
+<div class="screen" id="s-advice">
+  <div class="shdr" style="background:var(--gd)">
+    <div style="width:30px"></div><span class="stitle">💡 AIアドバイス</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody">
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--sh)">
+      <div style="font-size:13px;font-weight:900;color:var(--od);margin-bottom:8px">💬 今のあなたへ</div>
+      <p id="adv-message" style="font-size:13px;color:var(--t);line-height:1.7"></p>
+    </div>
+    <div id="adv-stats" style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--sh)"></div>
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:var(--sh)">
+      <div style="font-size:13px;font-weight:900;color:var(--od);margin-bottom:8px">🍽 あなたへのおすすめメニュー</div>
+      <div id="adv-recommend"></div>
+    </div>
+    <button onclick="renderAdvice()" style="display:block;width:100%;background:linear-gradient(135deg,var(--gd),#4a9232);border:none;border-radius:12px;padding:13px;color:white;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.35)">🔄 おすすめを更新する</button>
+  </div>
+</div>
+
+<!-- PAST -->
+<div class="screen" id="s-past">
+  <div class="shdr">
+    <button class="bk" onclick="showScreen('home')">＜</button>
+    <span class="stitle">📊 過去の記録</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody">
+    <div id="hist-list"><div style="padding:20px;text-align:center;color:var(--tl);font-size:13px">まだ記録がありません</div></div>
+  </div>
+</div>
+
+<!-- FOLLOW -->
+<div class="screen" id="s-follow">
+  <div class="shdr" style="background:var(--pu)">
+    <div style="width:30px"></div><span class="stitle">👥 フォロー</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody" style="overflow-y:auto">
+
+    <!-- タブ切替 -->
+    <div style="display:flex;gap:0;margin-bottom:16px;border-radius:12px;overflow:hidden;border:2px solid var(--pu)">
+      <button id="ftab-r" style="flex:1;padding:9px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:var(--pu);color:white;border:none;font-family:inherit" onclick="switchFollowTab('rank')">🏆 ランキング</button>
+      <button id="ftab-f" style="flex:1;padding:9px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:white;color:var(--pu);border:none;font-family:inherit" onclick="switchFollowTab('friends')">👫 友達</button>
+    </div>
+
+    <!-- ランキングタブ -->
+    <div id="fview-rank">
+      <!-- ランキング種類の切替 -->
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button id="rtab-streak" onclick="switchRankType('streak')" style="flex:1;padding:8px;border-radius:10px;border:none;font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;background:var(--od);color:white">🔥 連続記録</button>
+        <button id="rtab-balance" onclick="switchRankType('balance')" style="flex:1;padding:8px;border-radius:10px;border:none;font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;background:white;color:var(--od)">⚖️ バランス</button>
+      </div>
+      <div style="background:linear-gradient(135deg,#B39DDB,#9575CD);border-radius:16px;padding:14px 16px;margin-bottom:14px;color:white;text-align:center">
+        <div id="rank-award-label" style="font-size:12px;font-weight:700;opacity:0.9">今週の継続賞</div>
+        <div style="font-size:18px;font-weight:900;margin-top:2px">🏆 友達と頑張ろう！</div>
+      </div>
+      <div id="rank-list"></div>
+    </div>
+
+    <!-- 友達タブ -->
+    <div id="fview-friends" style="display:none">
+      <!-- 自分のQRコードカード -->
+      <div style="background:white;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:var(--sh);text-align:center">
+        <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:10px">📱 あなたのQRコード</div>
+        <div style="display:inline-block;padding:12px;background:#fff;border:2px solid #eee;border-radius:12px">
+          <div id="my-qr" style="width:120px;height:120px;display:grid;grid-template-columns:repeat(11,1fr);gap:0"></div>
+        </div>
+        <div style="font-size:11px;color:var(--tl);margin-top:8px">友達にこのQRを見せて<br>つながろう！</div>
+      </div>
+
+      <!-- 友達追加ボタン（デモ用） -->
+      <button onclick="addFriendDemo()" style="display:block;width:100%;background:linear-gradient(135deg,var(--pu),#9575CD);border:none;border-radius:12px;padding:13px;color:white;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 12px rgba(149,117,205,0.35)">📷 QRを読み取って友達を追加</button>
+
+      <!-- 友達リスト -->
+      <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:10px">👫 友達 (<span id="friend-count">0</span>)</div>
+      <div id="friend-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DRESSUP -->
+<div class="screen" id="s-dressup">
+  <div class="shdr" style="background:var(--p)">
+    <div style="width:30px"></div><span class="stitle">👗 着せ替え</span>
+    <button class="xbtn" onclick="showScreen('home')">✕</button>
+  </div>
+  <div class="sbody" style="overflow-y:auto">
+
+    <!-- プレビュー -->
+    <div style="background:white;border-radius:16px;padding:12px;margin-bottom:16px;box-shadow:var(--sh);display:flex;justify-content:center">
+      <div id="dressup-preview" style="width:160px;height:200px;position:relative">
+        <img id="dp-base" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center bottom" src="chara_stage5/chara_stage5_phase1.png" alt="">
+        <img id="dp-skirt" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;display:none" alt="">
+        <img id="dp-blouse" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;display:none" alt="">
+        <img id="dp-shoes" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;display:none" alt="">
+        <img id="dp-hairband" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;display:none" alt="">
+      </div>
+    </div>
+
+    <!-- トップス -->
+    <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:8px">👕 トップス</div>
+    <div class="item-row" id="row-blouse" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+    <!-- ボトムス -->
+    <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:8px">👗 ボトムス</div>
+    <div class="item-row" id="row-skirt" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+    <!-- アクセサリー -->
+    <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:8px">👑 アクセサリー</div>
+    <div class="item-row" id="row-hairband" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+    <!-- シューズ -->
+    <div style="font-size:13px;font-weight:900;color:var(--t);margin-bottom:8px">👟 シューズ</div>
+    <div class="item-row" id="row-shoes" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+  </div>
+</div>
+
+</div>
+<script>
+// 性別ごとのアバター画像パス
+let gender = 'girl'; // 'girl' or 'boy'
+const AVATAR_SET = {
+  girl: {
+    3:'chara_stage3/chara_stage3_phase1.png',
+    5:'chara_stage5/chara_stage5_phase1.png',
+    6:'chara_stage6/chara_stage6_phase1.png',
+  },
+  boy: {
+    3:'chara_stage3/chara_boy_stage3_phase1.png',
+    5:'chara_stage5/chara_boy_stage5_phase1.png',
+    6:'chara_stage6/chara_boy_stage6_phase1.png',
+  }
+};
+// 現在の性別のアバターセットを返す
+const AVATAR = new Proxy({}, { get: (_, k) => AVATAR_SET[gender][k] });
+
+// 性別を切り替える
+function toggleGender() {
+  gender = (gender === 'girl') ? 'boy' : 'girl';
+  document.getElementById('chara-img').src = getAvatarSrc(currentStage);
+  const btn = document.getElementById('gender-btn');
+  if (btn) btn.textContent = (gender === 'girl') ? '👧 女の子' : '👦 男の子';
+}
+
+// ===== 着せ替え機能 =====
+// カテゴリごとのアイテム定義（srcがnull = 「なし」）
+const ITEMS = {
+  blouse:   [ {id:'none',label:'なし',src:null}, {id:'blouse_01',label:'ブラウス',src:'items/blouse_05.png'} ],
+  skirt:    [ {id:'none',label:'なし',src:null}, {id:'skirt_01', label:'スカート',src:'items/skirt_05.png'} ],
+  hairband: [ {id:'none',label:'なし',src:null}, {id:'hairband_01',label:'カチューシャ',src:'items/hairband_05.png'} ],
+  shoes:    [ {id:'none',label:'なし',src:null} ], // 靴は後日追加
+};
+// 現在の着用状態（カテゴリ→選択中のアイテムid）
+let equipped = { blouse:'none', skirt:'none', hairband:'none', shoes:'none' };
+
+// 着せ替え画面を初期化
+function initDressup() {
+  // プレビューのベースを現在のキャラ画像に
+  document.getElementById('dp-base').src = getAvatarSrc(currentStage);
+  // 各カテゴリのアイテムボタンを生成
+  Object.keys(ITEMS).forEach(cat => {
+    const row = document.getElementById('row-' + cat);
+    const items = ITEMS[cat];
+    if (items.length <= 1 && cat === 'shoes') {
+      // 靴は「なし」＋近日追加プレースホルダ
+      row.innerHTML = renderItemBtn(cat, items[0]) +
+        `<div style="width:64px;height:64px;border-radius:12px;border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#bbb;text-align:center;line-height:1.3">近日<br>追加</div>`;
+    } else {
+      row.innerHTML = items.map(it => renderItemBtn(cat, it)).join('');
+    }
+  });
+  applyEquipped();
+}
+
+// アイテムボタンのHTML
+function renderItemBtn(cat, item) {
+  const sel = equipped[cat] === item.id;
+  const border = sel ? '3px solid var(--p)' : '2px solid #eee';
+  const inner = item.src
+    ? `<img src="${item.src}" style="width:100%;height:100%;object-fit:contain">`
+    : `<span style="font-size:11px;color:var(--tl);font-weight:700">なし</span>`;
+  return `<button onclick="equipItem('${cat}','${item.id}')" style="width:64px;height:64px;border-radius:12px;border:${border};background:white;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;position:relative">${inner}${sel?'<span style=\"position:absolute;top:-6px;right:-6px;background:var(--p);color:white;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center\">✓</span>':''}</button>`;
+}
+
+// アイテムを着用
+function equipItem(cat, id) {
+  equipped[cat] = id;
+  initDressup();   // ボタンの選択状態を再描画
+}
+
+// 着用状態をプレビューとホームに反映
+function applyEquipped() {
+  Object.keys(equipped).forEach(cat => {
+    const item = ITEMS[cat].find(it => it.id === equipped[cat]);
+    const src = item ? item.src : null;
+    // プレビュー側
+    const dp = document.getElementById('dp-' + cat);
+    if (dp) {
+      if (src) { dp.src = src; dp.style.display = 'block'; }
+      else { dp.style.display = 'none'; }
+    }
+    // ホーム側のレイヤー
+    const layer = document.getElementById('layer-' + cat);
+    if (layer) {
+      if (src) { layer.src = src; layer.classList.add('on'); }
+      else { layer.classList.remove('on'); }
+    }
+  });
+}
+
+
+// ===== フォロー機能 =====
+// 追加できる友達の候補（QR読み取りデモで順番に追加される）
+const FRIEND_POOL = [
+  { name: 'みき',   emoji: '🧑‍🦰', stage: 5, streak: 12, balanceScore: 88 },
+  { name: 'はると', emoji: '👦',    stage: 4, streak: 8,  balanceScore: 72 },
+  { name: 'ゆい',   emoji: '👧',    stage: 6, streak: 5,  balanceScore: 65 },
+  { name: 'そうた', emoji: '🧑',    stage: 5, streak: 20, balanceScore: 94 },
+  { name: 'あおい', emoji: '👩',    stage: 3, streak: 3,  balanceScore: 58 },
+];
+let myFriends = [];      // 追加済みの友達
+let likeState = {};      // {friendName: true/false} いいね済みか
+let cheerState = {};     // {friendName: true/false} 応援済みか
+let rankType = 'streak'; // 現在のランキング基準
+
+// QRを読み取って友達を追加（デモ用）
+function addFriendDemo() {
+  if (myFriends.length >= FRIEND_POOL.length) {
+    alert('これ以上追加できる友達がいません（デモ用）');
+    return;
+  }
+  const next = FRIEND_POOL[myFriends.length];
+  myFriends.push(next);
+  // 追加アニメーション風のフィードバック
+  renderFriends();
+  renderRanking();
+  // トースト表示
+  showToast(`${next.emoji} ${next.name} さんと友達になりました！`);
+}
+
+// トースト通知
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:12px 22px;border-radius:30px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+// 友達タブ／ランキングタブ切替
+function switchFollowTab(tab) {
+  const isRank = tab === 'rank';
+  document.getElementById('fview-rank').style.display = isRank ? 'block' : 'none';
+  document.getElementById('fview-friends').style.display = isRank ? 'none' : 'block';
+  document.getElementById('ftab-r').style.background = isRank ? 'var(--pu)' : 'white';
+  document.getElementById('ftab-r').style.color = isRank ? 'white' : 'var(--pu)';
+  document.getElementById('ftab-f').style.background = isRank ? 'white' : 'var(--pu)';
+  document.getElementById('ftab-f').style.color = isRank ? 'var(--pu)' : 'white';
+}
+
+// 友達リスト描画
+function renderFriends() {
+  document.getElementById('friend-count').textContent = myFriends.length;
+  const el = document.getElementById('friend-list');
+  if (myFriends.length === 0) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--tl);font-size:13px;background:white;border-radius:16px">まだ友達がいません<br>QRを読み取って追加しよう！</div>';
+    return;
+  }
+  el.innerHTML = myFriends.map(f => {
+    const liked = likeState[f.name];
+    const cheered = cheerState[f.name];
+    return `
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:50%;background:#F3EEFB;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${f.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:900;color:var(--t)">${f.name}</div>
+        <div style="font-size:11px;color:var(--tl);margin-top:2px">🔥 ${f.streak}日連続記録中</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="toggleLike('${f.name}')" style="background:${liked?'#FF8FAB':'#f0f0f0'};border:none;border-radius:10px;width:38px;height:38px;font-size:16px;cursor:pointer;transition:all 0.2s">${liked?'❤️':'🤍'}</button>
+        <button onclick="toggleCheer('${f.name}')" style="background:${cheered?'#FFD56B':'#f0f0f0'};border:none;border-radius:10px;padding:0 10px;height:38px;font-size:12px;font-weight:900;color:${cheered?'#E65100':'#999'};cursor:pointer;font-family:inherit;transition:all 0.2s">📣 応援</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// いいねトグル
+function toggleLike(name) {
+  likeState[name] = !likeState[name];
+  renderFriends();
+  if (likeState[name]) showToast(`❤️ ${name} さんにいいねしました！`);
+}
+
+// 応援トグル
+function toggleCheer(name) {
+  cheerState[name] = !cheerState[name];
+  renderFriends();
+  if (cheerState[name]) showToast(`📣 ${name} さんを応援しました！`);
+}
+
+// ランキング種類の切替
+function switchRankType(type) {
+  rankType = type;
+  const isStreak = type === 'streak';
+  document.getElementById('rtab-streak').style.background = isStreak ? 'var(--od)' : 'white';
+  document.getElementById('rtab-streak').style.color = isStreak ? 'white' : 'var(--od)';
+  document.getElementById('rtab-balance').style.background = isStreak ? 'white' : 'var(--od)';
+  document.getElementById('rtab-balance').style.color = isStreak ? 'var(--od)' : 'white';
+  document.getElementById('rank-award-label').textContent = isStreak ? '今週の継続賞' : '今週のベストバランス賞';
+  renderRanking();
+}
+
+// ランキング描画（種類に応じて並べ替え）
+function renderRanking() {
+  // 自分のデータ（バランススコアは記録から簡易算出、なければ75）
+  const myBalance = 75;
+  const me = { name: 'あなた', emoji: '⭐', stage: currentStage, streak: 7, balanceScore: myBalance, isMe: true };
+  const isStreak = rankType === 'streak';
+
+  const all = [me, ...myFriends].slice().sort((a, b) =>
+    isStreak ? b.streak - a.streak : b.balanceScore - a.balanceScore
+  );
+  const medals = ['🥇', '🥈', '🥉'];
+
+  document.getElementById('rank-list').innerHTML = all.map((u, i) => {
+    const rank = medals[i] || `${i + 1}位`;
+    const hi = u.isMe ? 'border:2px solid var(--pu);background:#F3EEFB' : 'background:white';
+    // 右側の指標を種類で出し分け
+    const metric = isStreak
+      ? `<div style="font-size:16px;font-weight:900;color:var(--od)">🔥${u.streak}</div><div style="font-size:9px;color:var(--tl)">連続日数</div>`
+      : `<div style="font-size:16px;font-weight:900;color:var(--gd)">${u.balanceScore}</div><div style="font-size:9px;color:var(--tl)">バランス点</div>`;
+    return `
+    <div style="${hi};border-radius:16px;padding:13px 14px;margin-bottom:8px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px">
+      <div style="font-size:20px;width:32px;text-align:center;flex-shrink:0">${rank}</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#F3EEFB;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${u.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:900;color:var(--t)">${u.name}${u.isMe?' <span style=\"font-size:10px;background:var(--pu);color:white;padding:1px 6px;border-radius:10px;vertical-align:middle\">YOU</span>':''}</div>
+        <div style="font-size:11px;color:var(--tl);margin-top:2px">Stage ${u.stage}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${metric}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// QRコード風の見た目を生成（ランダムドット・デモ用）
+function renderMyQR() {
+  const el = document.getElementById('my-qr');
+  if (!el || el.children.length > 0) return;
+  const N = 11;
+  const cells = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      let on;
+      const corner = (r < 3 && c < 3) || (r < 3 && c >= N-3) || (r >= N-3 && c < 3);
+      const cornerInner = (r===1&&c===1)||(r===1&&c===N-2)||(r===N-2&&c===1);
+      if (corner) {
+        on = false;
+        if ((r===0)||(r===2&&c<3)||(c===0&&r<3)) on=true;
+        if (r<3&&c>=N-3){on=(r===0||r===2||c===N-1||c===N-3);}
+        if (r>=N-3&&c<3){on=(r===N-1||r===N-3||c===0||c===2);}
+      } else if (cornerInner) {
+        on = true;
+      } else {
+        on = Math.random() > 0.5;
+      }
+      cells.push(on);
+    }
+  }
+  el.innerHTML = cells.map(on => `<div style="width:100%;aspect-ratio:1;background:${on?'#2C2C2C':'transparent'}"></div>`).join('');
+}
+
+// ===== Canvasに画像を描画（背景除去はCSS multiply に任せる）=====
+// ピクセル処理なし → 画質劣化なし / file://でも動作
+function drawNoBG(src, canvasEl, w, h) {
+  const img = new Image();
+  img.onload = function() {
+    // 画像の実際のサイズでcanvasを設定（高画質）
+    canvasEl.width  = img.naturalWidth  || img.width  || w || 220;
+    canvasEl.height = img.naturalHeight || img.height || h || 260;
+    const ctx = canvasEl.getContext('2d');
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    ctx.drawImage(img, 0, 0);
+    // CSSの mix-blend-mode:multiply が白背景・チェック柄を消す
+  };
+  img.onerror = function() {
+    canvasEl.width = w || 220;
+    canvasEl.height = h || 260;
+  };
+  img.src = src;
+}
+
+function getAvatarSrc(s) {
+  if (s <= 3) return AVATAR[3];
+  if (s === 5) return AVATAR[5];
+  return AVATAR[6];
+}
+// ===== 修正済み料理データベース =====
+// bad = 高カロリー・高脂質・過多
+// normal = 標準的
+// good = 栄養バランス良好
+// thin = カロリー不足（やせ方向）
+const DB=[
+  // 米・主食
+  {n:'白米',e:'🍚',cal:270,prot:5,fat:1,carb:58,b:'normal',a:'エネルギー源！おかずと合わせてバランスよく'},
+  {n:'ご飯',e:'🍚',cal:270,prot:5,fat:1,carb:58,b:'normal',a:'エネルギー源！おかずと合わせてバランスよく'},
+  {n:'わかめご飯',e:'🍚',cal:260,prot:5,fat:1,carb:56,b:'good',a:'わかめでミネラル・食物繊維補給！'},
+  {n:'玄米',e:'🍚',cal:260,prot:6,fat:2,carb:54,b:'good',a:'食物繊維豊富で腸活に◎'},
+  // 定食・和食（good系）
+  {n:'焼き魚定食',e:'🍱',cal:550,prot:35,fat:15,carb:65,b:'good',a:'バランス抜群の和食定食！'},
+  {n:'鮭の塩焼き定食',e:'🍱',cal:520,prot:32,fat:14,carb:62,b:'good',a:'DHA豊富で頭も体も元気に！'},
+  {n:'煮魚定食',e:'🍱',cal:500,prot:30,fat:12,carb:60,b:'good',a:'低脂質で健康的！'},
+  {n:'刺身定食',e:'🐟',cal:480,prot:35,fat:10,carb:58,b:'good',a:'低脂質・高たんぱく！最高のバランス'},
+  {n:'海鮮丼',e:'🥣',cal:580,prot:30,fat:12,carb:80,b:'good',a:'魚介たっぷりで栄養満点！'},
+  {n:'スープカレー',e:'🍛',cal:520,prot:22,fat:18,carb:60,b:'good',a:'野菜たっぷりで栄養バランス◎'},
+  {n:'寿司',e:'🍣',cal:480,prot:28,fat:10,carb:65,b:'good',a:'高たんぱく低脂質！理想的な食事'},
+  {n:'回転寿司',e:'🍣',cal:600,prot:32,fat:14,carb:78,b:'good',a:'魚介でオメガ3脂肪酸補給！'},
+  {n:'幕の内弁当',e:'📦',cal:650,prot:24,fat:18,carb:85,b:'good',a:'バランスが取れた弁当の王道！'},
+  {n:'しゃぶしゃぶ',e:'🍲',cal:480,prot:32,fat:16,carb:38,b:'good',a:'ポン酢で低カロリー！野菜たっぷり'},
+  {n:'豚汁',e:'🍲',cal:180,prot:10,fat:6,carb:18,b:'good',a:'野菜もたっぷりで栄養満点！'},
+  {n:'おでん',e:'🍢',cal:320,prot:18,fat:8,carb:38,b:'good',a:'低カロリーで体が温まる！'},
+  {n:'みそ汁',e:'🍲',cal:40,prot:3,fat:1,carb:5,b:'good',a:'発酵食品で腸内環境を整えよう'},
+  {n:'味噌汁',e:'🍲',cal:40,prot:3,fat:1,carb:5,b:'good',a:'毎日の習慣にしたい発酵食品！'},
+  {n:'サラダ',e:'🥗',cal:120,prot:4,fat:6,carb:12,b:'good',a:'ビタミン・食物繊維たっぷり！'},
+  {n:'ざるそば',e:'🍜',cal:320,prot:14,fat:2,carb:62,b:'good',a:'低カロリーで栄養バランス◎'},
+  {n:'そば',e:'🍜',cal:360,prot:14,fat:3,carb:70,b:'good',a:'食物繊維豊富！ルチンも摂れる'},
+  {n:'ざるうどん',e:'🍜',cal:340,prot:12,fat:2,carb:68,b:'good',a:'低カロリー！暑い日にぴったり'},
+  {n:'焼き鮭',e:'🐟',cal:220,prot:24,fat:10,carb:0,b:'good',a:'DHA・EPAで脳と体に栄養◎'},
+  {n:'目玉焼き',e:'🍳',cal:160,prot:12,fat:12,carb:1,b:'good',a:'完全栄養食！たんぱく質補給◎'},
+  {n:'ゆで卵',e:'🥚',cal:90,prot:8,fat:6,carb:0,b:'good',a:'完全栄養食！手軽にたんぱく質'},
+  {n:'ヨーグルト',e:'🥛',cal:120,prot:8,fat:4,carb:14,b:'good',a:'乳酸菌で腸活！カルシウム補給◎'},
+  {n:'バナナ',e:'🍌',cal:90,prot:1,fat:0,carb:22,b:'good',a:'カリウム豊富！運動前後に◎'},
+  {n:'おかゆ',e:'🥣',cal:150,prot:3,fat:1,carb:32,b:'good',a:'消化しやすい！体調不良の時に◎'},
+  // normal系
+  {n:'鶏の唐揚げ定食',e:'🍱',cal:750,prot:38,fat:28,carb:72,b:'normal',a:'たんぱく質豊富！野菜も一緒に食べよう'},
+  {n:'唐揚げ',e:'🍗',cal:420,prot:28,fat:22,carb:18,b:'normal',a:'たんぱく質たっぷり！'},
+  {n:'から揚げ',e:'🍗',cal:400,prot:28,fat:22,carb:18,b:'normal',a:'たんぱく質豊富！'},
+  {n:'豚の生姜焼き定食',e:'🍱',cal:680,prot:32,fat:24,carb:72,b:'normal',a:'豚肉でビタミンB1補給！'},
+  {n:'生姜焼き定食',e:'🍱',cal:680,prot:32,fat:24,carb:72,b:'normal',a:'豚肉でビタミンB1補給！'},
+  {n:'肉じゃが定食',e:'🍱',cal:600,prot:22,fat:18,carb:75,b:'normal',a:'野菜もたっぷりで栄養バランス◎'},
+  {n:'ハンバーグ定食',e:'🍱',cal:750,prot:30,fat:32,carb:68,b:'normal',a:'たんぱく質◎野菜も忘れずに'},
+  {n:'チキン南蛮定食',e:'🍱',cal:780,prot:35,fat:30,carb:75,b:'normal',a:'たんぱく質豊富！'},
+  {n:'麻婆豆腐定食',e:'🍱',cal:620,prot:25,fat:22,carb:68,b:'normal',a:'豆腐でたんぱく質補給！'},
+  {n:'親子丼',e:'🥣',cal:680,prot:28,fat:18,carb:88,b:'normal',a:'卵でたんぱく質補給！'},
+  {n:'牛丼',e:'🥣',cal:700,prot:25,fat:22,carb:90,b:'normal',a:'手軽にたんぱく質補給できる！'},
+  {n:'カレーライス',e:'🍛',cal:680,prot:18,fat:22,carb:92,b:'normal',a:'野菜カレーなら栄養バランスもっと◎'},
+  {n:'チキンカレー',e:'🍛',cal:650,prot:25,fat:18,carb:88,b:'normal',a:'たんぱく質豊富なチキンカレー！'},
+  {n:'パスタ',e:'🍝',cal:580,prot:18,fat:16,carb:84,b:'normal',a:'炭水化物多め。サラダと一緒に！'},
+  {n:'ミートソース',e:'🍝',cal:680,prot:26,fat:22,carb:84,b:'normal',a:'たんぱく質豊富！野菜も摂れる'},
+  {n:'ナポリタン',e:'🍝',cal:620,prot:18,fat:18,carb:90,b:'normal',a:'野菜も入って食べやすい！'},
+  {n:'サンドイッチ',e:'🥪',cal:380,prot:16,fat:14,carb:46,b:'normal',a:'手軽に栄養補給！'},
+  {n:'ハムサンド',e:'🥪',cal:340,prot:14,fat:12,carb:42,b:'normal',a:'手軽にたんぱく質補給！'},
+  {n:'トースト',e:'🍞',cal:220,prot:7,fat:5,carb:38,b:'normal',a:'卵や野菜と一緒に食べよう！'},
+  {n:'おにぎり',e:'🍙',cal:180,prot:4,fat:1,carb:38,b:'normal',a:'手軽にエネルギー補給！'},
+  {n:'鮭おにぎり',e:'🍙',cal:200,prot:8,fat:2,carb:38,b:'good',a:'鮭でたんぱく質とDHA補給！'},
+  {n:'ツナマヨおにぎり',e:'🍙',cal:230,prot:7,fat:6,carb:38,b:'normal',a:'手軽でおいしい！'},
+  {n:'梅おにぎり',e:'🍙',cal:175,prot:4,fat:1,carb:38,b:'good',a:'低カロリー！クエン酸で疲労回復'},
+  {n:'チャーハン',e:'🍚',cal:580,prot:18,fat:20,carb:78,b:'normal',a:'卵でたんぱく質補給！'},
+  {n:'炒飯',e:'🍚',cal:580,prot:18,fat:20,carb:78,b:'normal',a:'高火力で炒めた香ばしい一品'},
+  {n:'オムライス',e:'🍳',cal:620,prot:22,fat:22,carb:78,b:'normal',a:'卵でたんぱく質補給！'},
+  {n:'うどん',e:'🍜',cal:380,prot:12,fat:4,carb:76,b:'normal',a:'消化しやすい！具材で栄養アップ'},
+  {n:'きつねうどん',e:'🍜',cal:420,prot:14,fat:8,carb:72,b:'normal',a:'油揚げでたんぱく質プラス！'},
+  {n:'ハンバーガー',e:'🍔',cal:480,prot:20,fat:22,carb:50,b:'normal',a:'バランスが偏りやすい。野菜も追加して'},
+  {n:'フライドチキン',e:'🍗',cal:420,prot:28,fat:22,carb:20,b:'normal',a:'たんぱく質豊富！'},
+  {n:'ステーキ',e:'🥩',cal:580,prot:42,fat:32,carb:4,b:'normal',a:'高たんぱく！鉄分補給にも◎'},
+  {n:'餃子',e:'🥟',cal:280,prot:14,fat:12,carb:30,b:'normal',a:'野菜もたっぷり！たんぱく質補給'},
+  {n:'焼き餃子',e:'🥟',cal:300,prot:14,fat:14,carb:30,b:'normal',a:'外はパリパリ！栄養バランス◎'},
+  {n:'鍋',e:'🍲',cal:400,prot:28,fat:12,carb:38,b:'good',a:'野菜たっぷりで栄養バランス◎'},
+  // ===== bad系（高カロリー・高脂質・過多） =====
+  {n:'カツカレー',e:'🍛',cal:950,prot:30,fat:38,carb:105,b:'bad',a:'高カロリー！今日は運動を意識して'},
+  {n:'天丼',e:'🥣',cal:780,prot:22,fat:28,carb:100,b:'bad',a:'炭水化物・脂質多め。次の食事は軽めに！'},
+  {n:'カツ丼',e:'🥣',cal:850,prot:30,fat:32,carb:98,b:'bad',a:'高カロリー！次の食事は軽めに'},
+  {n:'天ぷら定食',e:'🍱',cal:820,prot:28,fat:35,carb:88,b:'bad',a:'脂質多め。次の食事は軽めに！'},
+  {n:'とんかつ定食',e:'🍱',cal:850,prot:35,fat:38,carb:80,b:'bad',a:'高カロリー！夕食は軽めにしよう'},
+  // ラーメン系：全部bad（脂質・塩分過多）
+  {n:'ラーメン',e:'🍜',cal:500,prot:20,fat:18,carb:72,b:'bad',a:'脂質・塩分多め。スープは残そう！'},
+  {n:'豚骨ラーメン',e:'🍜',cal:700,prot:24,fat:30,carb:78,b:'bad',a:'高脂質・高カロリー！野菜トッピングを追加して'},
+  {n:'醤油ラーメン',e:'🍜',cal:500,prot:20,fat:16,carb:72,b:'bad',a:'塩分多め。スープは残そう！'},
+  {n:'味噌ラーメン',e:'🍜',cal:550,prot:22,fat:20,carb:74,b:'bad',a:'塩分・脂質多め。野菜トッピングで栄養アップ！'},
+  {n:'塩ラーメン',e:'🍜',cal:480,prot:18,fat:14,carb:70,b:'bad',a:'塩分多め。スープは残そう！'},
+  {n:'つけ麺',e:'🍜',cal:720,prot:30,fat:22,carb:95,b:'bad',a:'高カロリー！麺の量に注意'},
+  {n:'担々麺',e:'🍜',cal:750,prot:26,fat:35,carb:72,b:'bad',a:'高脂質・高カロリー！次の食事は軽めに'},
+  {n:'二郎系ラーメン',e:'🍜',cal:1200,prot:48,fat:55,carb:120,b:'bad',a:'超高カロリー！今日は軽めにしよう'},
+  // ファストフード系：bad
+  {n:'フライドポテト',e:'🍟',cal:380,prot:4,fat:20,carb:50,b:'bad',a:'脂質・塩分多め。量を控えめに！'},
+  {n:'チーズバーガー',e:'🍔',cal:600,prot:26,fat:30,carb:52,b:'bad',a:'高カロリー！サラダも一緒に！'},
+  {n:'ダブルバーガー',e:'🍔',cal:800,prot:40,fat:42,carb:54,b:'bad',a:'高カロリー！今日は運動しよう'},
+  {n:'カップ麺',e:'🍜',cal:420,prot:10,fat:18,carb:58,b:'bad',a:'塩分・脂質多め。野菜を追加しよう'},
+  {n:'カップヌードル',e:'🍜',cal:380,prot:10,fat:15,carb:52,b:'bad',a:'塩分多め。スープは残そう'},
+  {n:'インスタントラーメン',e:'🍜',cal:450,prot:10,fat:18,carb:60,b:'bad',a:'塩分・脂質多め。卵や野菜を追加して'},
+  {n:'カルボナーラ',e:'🍝',cal:850,prot:26,fat:40,carb:85,b:'bad',a:'高脂質・高カロリー！量を控えめに！'},
+  {n:'菓子パン',e:'🍞',cal:350,prot:6,fat:14,carb:52,b:'bad',a:'糖質・脂質多め。食事として食べるなら追加を'},
+  {n:'ショートケーキ',e:'🍰',cal:380,prot:6,fat:18,carb:48,b:'bad',a:'糖質・脂質多め。特別な日に！'},
+  {n:'アイスクリーム',e:'🍦',cal:220,prot:4,fat:12,carb:28,b:'bad',a:'脂質・糖質多め。適量で楽しもう'},
+  // ===== 追加分：コンビニ飯 =====
+  {n:'コンビニおにぎり',e:'🍙',cal:180,prot:4,fat:1,carb:38,b:'normal',a:'手軽な主食。おかずと組み合わせよう'},
+  {n:'ツナマヨおにぎり（コンビニ）',e:'🍙',cal:230,prot:6,fat:9,carb:32,b:'normal',a:'マヨで脂質やや高め。野菜も足そう'},
+  {n:'からあげクン',e:'🍗',cal:230,prot:13,fat:15,carb:9,b:'bad',a:'手軽だが脂質高め。頻度に注意'},
+  {n:'肉まん',e:'🥟',cal:250,prot:8,fat:8,carb:36,b:'normal',a:'手軽な軽食。野菜が少なめ'},
+  {n:'ピザまん',e:'🥟',cal:240,prot:7,fat:9,carb:33,b:'normal',a:'小腹満たしに。栄養は偏りがち'},
+  {n:'サラダチキン',e:'🍗',cal:110,prot:23,fat:2,carb:1,b:'good',a:'高タンパク低脂質！筋トレの味方'},
+  {n:'カット野菜サラダ',e:'🥗',cal:80,prot:3,fat:4,carb:9,b:'good',a:'手軽にビタミン補給。ドレッシングは控えめに'},
+  {n:'ゆで卵（コンビニ）',e:'🥚',cal:75,prot:6,fat:5,carb:1,b:'good',a:'良質なタンパク質。小腹満たしに最適'},
+  {n:'おでん（コンビニ）',e:'🍢',cal:200,prot:14,fat:6,carb:22,b:'good',a:'低カロリーで温まる。タンパク質も◎'},
+  {n:'コンビニ弁当（幕の内）',e:'🍱',cal:650,prot:22,fat:20,carb:90,b:'normal',a:'バランス型。野菜が少なめなら追加を'},
+  {n:'カップスープ',e:'🥣',cal:90,prot:3,fat:3,carb:13,b:'normal',a:'手軽な一品。塩分はやや高め'},
+  {n:'プロテインバー',e:'🍫',cal:200,prot:15,fat:9,carb:18,b:'normal',a:'タンパク質補給に。間食代わりに◎'},
+  {n:'ブランパン',e:'🥖',cal:120,prot:8,fat:5,carb:12,b:'good',a:'低糖質・高食物繊維。ダイエット向き'},
+  {n:'冷やし中華（コンビニ）',e:'🍜',cal:430,prot:15,fat:10,carb:68,b:'normal',a:'夏の定番。具で栄養バランスUP'},
+  {n:'パスタサラダ',e:'🥗',cal:330,prot:9,fat:14,carb:42,b:'normal',a:'手軽だが炭水化物多め。野菜も意識'},
+  {n:'豆腐バー',e:'🍢',cal:100,prot:11,fat:5,carb:3,b:'good',a:'植物性タンパク質。低カロリーで満足'},
+  {n:'枝豆',e:'🫛',cal:120,prot:11,fat:5,carb:9,b:'good',a:'タンパク質と食物繊維が豊富！'},
+  {n:'冷奴',e:'🍢',cal:90,prot:8,fat:5,carb:3,b:'good',a:'低カロリー高タンパク。さっぱり一品'},
+  // ===== 学食メニュー =====
+  {n:'日替わり定食',e:'🍱',cal:680,prot:25,fat:22,carb:88,b:'good',a:'バランス型！主菜・副菜・汁物が揃う'},
+  {n:'A定食',e:'🍱',cal:720,prot:28,fat:25,carb:90,b:'normal',a:'しっかり食べたい時に。野菜も忘れずに'},
+  {n:'唐揚げ定食（学食）',e:'🍗',cal:780,prot:30,fat:35,carb:78,b:'bad',a:'人気メニューだが脂質高め'},
+  {n:'焼き魚定食（学食）',e:'🐟',cal:550,prot:30,fat:15,carb:68,b:'good',a:'魚の良質な脂とタンパク質！理想的'},
+  {n:'カレーライス（学食）',e:'🍛',cal:700,prot:15,fat:22,carb:105,b:'normal',a:'手軽だが野菜サラダを添えたい'},
+  {n:'うどん（学食）',e:'🍜',cal:380,prot:11,fat:5,carb:72,b:'normal',a:'消化に良い。タンパク質をプラスしたい'},
+  {n:'ミニ丼セット',e:'🍚',cal:600,prot:20,fat:15,carb:95,b:'normal',a:'麺と丼のセット。炭水化物多め'},
+  {n:'サラダボウル',e:'🥗',cal:250,prot:15,fat:10,carb:25,b:'good',a:'野菜たっぷり！タンパク質入りなら最高'},
+  {n:'学食そば',e:'🍜',cal:350,prot:12,fat:4,carb:65,b:'normal',a:'軽めの一食。具で栄養を足そう'},
+  {n:'豚汁定食',e:'🍲',cal:580,prot:22,fat:18,carb:72,b:'good',a:'具だくさんで栄養豊富！体も温まる'},
+  // ===== 洋食 =====
+  {n:'グラタン',e:'🧀',cal:450,prot:18,fat:25,carb:38,b:'bad',a:'チーズで脂質高め。野菜を添えて'},
+  {n:'ドリア',e:'🧀',cal:520,prot:16,fat:24,carb:58,b:'bad',a:'濃厚で高カロリー。たまのご褒美に'},
+  {n:'ビーフシチュー',e:'🍲',cal:380,prot:22,fat:18,carb:28,b:'good',a:'お肉と野菜たっぷり。栄養バランス◎'},
+  {n:'クリームシチュー',e:'🍲',cal:340,prot:15,fat:16,carb:32,b:'good',a:'野菜とタンパク質が摂れる温かい一品'},
+  {n:'ロールキャベツ',e:'🥬',cal:220,prot:14,fat:12,carb:14,b:'good',a:'野菜と肉のバランスが良い優秀メニュー'},
+  {n:'ポトフ',e:'🍲',cal:200,prot:13,fat:7,carb:20,b:'good',a:'野菜の旨味たっぷり。低カロリーで満足'},
+  {n:'オムレツ',e:'🍳',cal:230,prot:14,fat:17,carb:3,b:'good',a:'良質なタンパク質。野菜入りなら最高'},
+  {n:'エビフライ',e:'🍤',cal:280,prot:15,fat:16,carb:18,b:'normal',a:'揚げ物だがタンパク質も。野菜を添えて'},
+  {n:'ミックスフライ',e:'🍤',cal:550,prot:22,fat:35,carb:38,b:'bad',a:'揚げ物の盛り合わせ。脂質に注意'},
+  {n:'ビーフストロガノフ',e:'🍲',cal:420,prot:20,fat:22,carb:35,b:'normal',a:'お肉たっぷり。野菜も添えたい'},
+  {n:'ラザニア',e:'🧀',cal:480,prot:20,fat:24,carb:45,b:'bad',a:'チーズと肉で高カロリー。たまに楽しもう'},
+  {n:'ピザ',e:'🍕',cal:550,prot:20,fat:22,carb:65,b:'bad',a:'高カロリー。サラダと一緒にバランスよく'},
+  {n:'マルゲリータ',e:'🍕',cal:480,prot:18,fat:18,carb:60,b:'normal',a:'シンプルなピザ。野菜トッピングを足そう'},
+  {n:'ミネストローネ',e:'🍲',cal:150,prot:6,fat:5,carb:20,b:'good',a:'野菜たっぷりスープ。食前に◎'},
+  {n:'コーンスープ',e:'🥣',cal:140,prot:4,fat:6,carb:18,b:'normal',a:'優しい味。野菜のおかずを足したい'},
+  {n:'シーザーサラダ',e:'🥗',cal:220,prot:8,fat:16,carb:10,b:'good',a:'野菜が摂れるがドレッシングは控えめに'},
+  {n:'カプレーゼ',e:'🍅',cal:200,prot:11,fat:15,carb:6,b:'good',a:'トマトとチーズでビタミン・タンパク質'},
+  {n:'キッシュ',e:'🥧',cal:340,prot:13,fat:22,carb:22,b:'normal',a:'卵と野菜入り。脂質はやや高め'},
+  {n:'ハヤシライス',e:'🍛',cal:620,prot:16,fat:20,carb:90,b:'normal',a:'お肉入りだが炭水化物多め。野菜を添えて'},
+  {n:'チキンソテー',e:'🍗',cal:280,prot:28,fat:15,carb:5,b:'good',a:'高タンパク！野菜を添えて完璧な一皿'},
+  {n:'ポークソテー',e:'🥩',cal:340,prot:26,fat:22,carb:6,b:'good',a:'しっかりタンパク質。付け合わせ野菜を'},
+  {n:'白身魚のムニエル',e:'🐟',cal:240,prot:24,fat:13,carb:6,b:'good',a:'低脂質で高タンパク。ヘルシーな洋食'},
+  // ===== 野菜中心メニュー =====
+  {n:'温野菜サラダ',e:'🥗',cal:90,prot:4,fat:2,carb:15,b:'good',a:'野菜たっぷり！ビタミン・食物繊維補給'},
+  {n:'グリーンサラダ',e:'🥬',cal:50,prot:2,fat:1,carb:8,b:'good',a:'低カロリー。タンパク質を足すと満足感UP'},
+  {n:'ほうれん草のおひたし',e:'🥬',cal:40,prot:3,fat:1,carb:5,b:'good',a:'鉄分・ビタミン豊富な副菜'},
+  {n:'きんぴらごぼう',e:'🥕',cal:110,prot:3,fat:5,carb:15,b:'good',a:'食物繊維たっぷり。腸活にも◎'},
+  {n:'ひじきの煮物',e:'🥢',cal:100,prot:4,fat:4,carb:13,b:'good',a:'ミネラル・食物繊維が豊富な常備菜'},
+  {n:'切り干し大根',e:'🥢',cal:90,prot:3,fat:3,carb:14,b:'good',a:'カルシウム・食物繊維が摂れる和惣菜'},
+  {n:'野菜炒め',e:'🥦',cal:180,prot:8,fat:11,carb:14,b:'good',a:'手軽に野菜補給。油は控えめに'},
+  {n:'筑前煮',e:'🥕',cal:180,prot:9,fat:6,carb:24,b:'good',a:'根菜たっぷり！栄養バランスが良い'},
+  {n:'かぼちゃの煮物',e:'🎃',cal:120,prot:2,fat:1,carb:27,b:'good',a:'βカロテン豊富。優しい甘さの副菜'},
+  {n:'ナムル',e:'🥬',cal:80,prot:3,fat:5,carb:7,b:'good',a:'野菜をたっぷり。ごま油の香りが◎'},
+  {n:'ラタトゥイユ',e:'🍅',cal:120,prot:3,fat:6,carb:15,b:'good',a:'夏野菜たっぷり！抗酸化作用も期待'},
+  {n:'蒸し野菜',e:'🥦',cal:70,prot:4,fat:1,carb:13,b:'good',a:'素材の味を活かしたヘルシー調理'},
+  {n:'野菜スティック',e:'🥕',cal:60,prot:2,fat:1,carb:11,b:'good',a:'生野菜でビタミン補給。ディップは控えめに'},
+  {n:'もずく酢',e:'🥢',cal:30,prot:1,fat:0,carb:6,b:'good',a:'低カロリーで食物繊維。さっぱり副菜'},
+  {n:'めかぶ',e:'🥢',cal:25,prot:2,fat:0,carb:4,b:'good',a:'海藻のミネラルと食物繊維が豊富'},
+  {n:'トマトサラダ',e:'🍅',cal:60,prot:2,fat:2,carb:9,b:'good',a:'リコピン豊富。さっぱり食べやすい'},
+  {n:'コールスロー',e:'🥬',cal:140,prot:2,fat:10,carb:11,b:'normal',a:'キャベツの食物繊維。マヨは控えめに'},
+  {n:'ブロッコリーサラダ',e:'🥦',cal:120,prot:8,fat:6,carb:10,b:'good',a:'ビタミンC・タンパク質が摂れる優秀野菜'},
+  {n:'なすの煮浸し',e:'🍆',cal:80,prot:2,fat:4,carb:10,b:'good',a:'低カロリーな和の副菜。だしが染みる'},
+  {n:'きのこのソテー',e:'🍄',cal:90,prot:4,fat:5,carb:8,b:'good',a:'低カロリーで食物繊維たっぷり'},
+  {n:'豆サラダ',e:'🫘',cal:160,prot:10,fat:6,carb:20,b:'good',a:'植物性タンパク質と食物繊維が豊富'},
+  {n:'海藻サラダ',e:'🥗',cal:50,prot:2,fat:1,carb:8,b:'good',a:'ミネラル豊富で低カロリー。毎日でも◎'},
+  // ===== 朝食・軽食 =====
+  {n:'グラノーラ',e:'🥣',cal:240,prot:5,fat:8,carb:38,b:'normal',a:'手軽な朝食。糖質多めなので量に注意'},
+  {n:'オートミール',e:'🥣',cal:150,prot:5,fat:3,carb:27,b:'good',a:'食物繊維豊富。腹持ちが良い健康朝食'},
+  {n:'フルーツヨーグルト',e:'🍓',cal:160,prot:6,fat:4,carb:26,b:'good',a:'乳酸菌とビタミン。朝食やおやつに'},
+  {n:'スムージー',e:'🥤',cal:180,prot:4,fat:2,carb:38,b:'good',a:'野菜・果物を手軽に。糖質には注意'},
+  {n:'バナナ（朝）',e:'🍌',cal:90,prot:1,fat:0,carb:23,b:'good',a:'エネルギー補給に最適。手軽な一本'},
+  {n:'りんご',e:'🍎',cal:80,prot:0,fat:0,carb:21,b:'good',a:'食物繊維とビタミン。間食にも◎'},
+  {n:'ベーグル',e:'🥯',cal:270,prot:9,fat:2,carb:53,b:'normal',a:'低脂質だが糖質多め。具を工夫しよう'},
+  {n:'フレンチトースト',e:'🍞',cal:340,prot:10,fat:14,carb:42,b:'normal',a:'卵入りで栄養あり。糖質・脂質は多め'},
+  {n:'パンケーキ',e:'🥞',cal:400,prot:8,fat:14,carb:60,b:'bad',a:'シロップで糖質高め。たまのご褒美に'},
+  {n:'ホットサンド',e:'🥪',cal:350,prot:14,fat:16,carb:38,b:'normal',a:'具材次第で栄養UP。野菜入りがおすすめ'},
+  {n:'スクランブルエッグ',e:'🍳',cal:200,prot:13,fat:15,carb:2,b:'good',a:'良質なタンパク質の朝食定番'},
+  {n:'味噌汁（具だくさん）',e:'🍲',cal:90,prot:6,fat:3,carb:10,b:'good',a:'具材で栄養豊富。毎食の汁物に最適'},
+  // ===== 麺・丼追加 =====
+  {n:'冷やしうどん',e:'🍜',cal:350,prot:10,fat:3,carb:70,b:'normal',a:'さっぱり。タンパク質と野菜を足したい'},
+  {n:'ぶっかけうどん',e:'🍜',cal:380,prot:12,fat:5,carb:72,b:'normal',a:'手軽な一杯。具を増やして栄養UP'},
+  {n:'たぬきそば',e:'🍜',cal:400,prot:12,fat:8,carb:70,b:'normal',a:'軽めの麺類。タンパク質が少なめ'},
+  {n:'山かけそば',e:'🍜',cal:380,prot:14,fat:4,carb:68,b:'good',a:'とろろで栄養価UP。消化にも優しい'},
+  {n:'中華丼',e:'🍚',cal:550,prot:18,fat:15,carb:80,b:'good',a:'野菜たっぷり！バランスの良い丼'},
+  {n:'マーボー丼',e:'🍚',cal:600,prot:20,fat:22,carb:78,b:'normal',a:'タンパク質豊富だが脂質やや高め'},
+  {n:'ビビンバ',e:'🍚',cal:550,prot:20,fat:16,carb:78,b:'good',a:'野菜・肉・卵でバランス良好な韓国丼'},
+  {n:'石焼きビビンバ',e:'🍚',cal:620,prot:22,fat:18,carb:88,b:'good',a:'具だくさんで栄養バランス◎'},
+  {n:'ロコモコ丼',e:'🍚',cal:680,prot:24,fat:28,carb:78,b:'bad',a:'ハンバーグと卵で高カロリー。野菜を添えて'},
+  {n:'鉄火丼',e:'🍣',cal:480,prot:28,fat:8,carb:72,b:'good',a:'マグロの良質なタンパク質！ヘルシー'},
+  {n:'ねぎとろ丼',e:'🍣',cal:520,prot:24,fat:18,carb:68,b:'good',a:'魚の良質な脂。タンパク質も豊富'},
+  {n:'豚丼',e:'🍚',cal:680,prot:24,fat:24,carb:88,b:'normal',a:'がっつり系。野菜を添えてバランスを'},
+  // ===== 中華・韓国・エスニック =====
+  {n:'青椒肉絲',e:'🥢',cal:280,prot:18,fat:16,carb:14,b:'good',a:'肉と野菜のバランス◎。中華の優等生'},
+  {n:'回鍋肉',e:'🥢',cal:380,prot:18,fat:26,carb:16,b:'normal',a:'キャベツたっぷりだが脂質多め'},
+  {n:'エビチリ',e:'🍤',cal:280,prot:18,fat:14,carb:18,b:'normal',a:'高タンパク。野菜を添えるとより良い'},
+  {n:'春巻き',e:'🥢',cal:240,prot:7,fat:14,carb:22,b:'normal',a:'揚げ物。野菜入りだが脂質に注意'},
+  {n:'小籠包',e:'🥟',cal:200,prot:9,fat:10,carb:20,b:'normal',a:'点心の定番。野菜のおかずを足そう'},
+  {n:'チャプチェ',e:'🍜',cal:320,prot:10,fat:12,carb:42,b:'good',a:'春雨と野菜・肉のバランス良い韓国料理'},
+  {n:'キンパ',e:'🍙',cal:350,prot:10,fat:10,carb:55,b:'normal',a:'韓国海苔巻き。具で栄養バランスUP'},
+  {n:'スンドゥブチゲ',e:'🍲',cal:280,prot:20,fat:14,carb:16,b:'good',a:'豆腐と野菜たっぷり！タンパク質も◎'},
+  {n:'タコライス',e:'🍚',cal:580,prot:20,fat:22,carb:68,b:'normal',a:'野菜入りだがチーズで脂質多め'},
+  {n:'ガパオライス',e:'🍚',cal:600,prot:22,fat:22,carb:78,b:'normal',a:'タイ料理。野菜と肉のバランスは良い'},
+  {n:'フォー',e:'🍜',cal:380,prot:18,fat:6,carb:62,b:'good',a:'あっさり低脂質。野菜とタンパク質が◎'},
+  {n:'グリーンカレー',e:'🍛',cal:480,prot:16,fat:24,carb:50,b:'normal',a:'スパイシー。ココナッツで脂質やや高め'},
+  {n:'ビリヤニ',e:'🍚',cal:620,prot:18,fat:20,carb:92,b:'normal',a:'スパイス豊富。炭水化物多めなので量に注意'},
+  // ===== 間食・スイーツ =====
+  {n:'プリン',e:'🍮',cal:150,prot:5,fat:6,carb:20,b:'bad',a:'糖質多め。おやつは適量を意識して'},
+  {n:'チョコレート',e:'🍫',cal:280,prot:3,fat:18,carb:28,b:'bad',a:'高カロリー。少量を楽しむのが◎'},
+  {n:'クッキー',e:'🍪',cal:200,prot:3,fat:10,carb:26,b:'bad',a:'糖質・脂質多め。食べ過ぎに注意'},
+  {n:'ドーナツ',e:'🍩',cal:340,prot:5,fat:18,carb:40,b:'bad',a:'揚げ菓子で高カロリー。たまのご褒美に'},
+  {n:'大福',e:'🍡',cal:200,prot:4,fat:1,carb:45,b:'normal',a:'低脂質だが糖質多め。和菓子は適量を'},
+  {n:'みたらし団子',e:'🍡',cal:180,prot:3,fat:1,carb:40,b:'normal',a:'低脂質。糖質多めなので量に気をつけて'},
+  {n:'どら焼き',e:'🥮',cal:240,prot:5,fat:3,carb:48,b:'normal',a:'あんこの和菓子。糖質多めで適量を'},
+  {n:'ナッツ',e:'🥜',cal:180,prot:6,fat:15,carb:6,b:'good',a:'良質な脂質。間食に少量がおすすめ'},
+  {n:'ドライフルーツ',e:'🍇',cal:120,prot:1,fat:0,carb:30,b:'normal',a:'食物繊維あり。糖質は濃縮されている'},
+  {n:'カフェラテ',e:'☕',cal:120,prot:6,fat:6,carb:10,b:'normal',a:'カルシウム補給。砂糖は控えめに'},
+  {n:'ブラックコーヒー',e:'☕',cal:5,prot:0,fat:0,carb:1,b:'good',a:'ほぼノンカロリー。リフレッシュに'},
+  {n:'豆乳',e:'🥛',cal:90,prot:7,fat:4,carb:6,b:'good',a:'植物性タンパク質。間食代わりにも◎'},
+  {n:'プロテインドリンク',e:'🥤',cal:120,prot:20,fat:2,carb:5,b:'good',a:'高タンパク低脂質。トレ後の補給に最適'},
+  {n:'ゼリー',e:'🍮',cal:80,prot:1,fat:0,carb:19,b:'normal',a:'低脂質。糖質はあるが軽めのおやつ'},
+  {n:'おにぎり（鮭・コンビニ）',e:'🍙',cal:200,prot:5,fat:2,carb:40,b:'normal',a:'手軽な主食。サラダやスープと一緒に'},
+  {n:'肉野菜炒め定食',e:'🍱',cal:620,prot:26,fat:24,carb:62,b:'good',a:'肉も野菜もしっかり！バランス良好'},
+  {n:'チキンステーキ定食',e:'🍗',cal:680,prot:35,fat:28,carb:62,b:'good',a:'高タンパク！野菜の副菜も摂れる'},
+  {n:'サバの味噌煮定食',e:'🐟',cal:580,prot:28,fat:22,carb:60,b:'good',a:'青魚の良質な脂。栄養バランス◎'},
+  {n:'冷やしトマト',e:'🍅',cal:30,prot:1,fat:0,carb:7,b:'good',a:'リコピン豊富。低カロリーな副菜'},
+  {n:'わかめスープ',e:'🥣',cal:40,prot:2,fat:1,carb:5,b:'good',a:'低カロリーで海藻のミネラル補給'},
+];
+
+// ===== 状態管理 =====
+let currentStage = 5;
+let meals = [];
+let detOpen = false;
+let lastResult = null;
+
+function updateDebug() {
+  document.getElementById('debug').textContent =
+    `stage: ${currentStage} | 記録数: ${meals.length} | 最後のbalance: ${lastResult ? lastResult.balance : '-'}`;
+}
+
+function getAvatarSrc(s) {
+  if (s <= 3) return AVATAR[3];
+  if (s === 5) return AVATAR[5];
+  return AVATAR[6]; // 6以上はすべてstage6の画像
+}
+
+// ===== アドバイス機能：記録に応じて出し分け =====
+function renderAdvice() {
+  // 現在の体型ステージで方向性を判定
+  // stage<=4: やせ気味 / stage5: バランス良 / stage>=6: 太り気味
+  let mode;
+  if (currentStage <= 4) mode = 'thin';
+  else if (currentStage === 5) mode = 'good';
+  else mode = 'over';
+
+  // メッセージ（3パターン）
+  const messages = {
+    thin: 'エネルギーが少し足りていないかも。主食やタンパク質をしっかり摂って、元気をチャージしましょう💪 3食バランスよく食べるのが大切です。',
+    good: '食事のバランスがとても良い状態です！この調子をキープしましょう✨ 彩り豊かな食事を続けると、もっと元気になれますよ。',
+    over: '少しカロリーや脂質が多めの傾向です。野菜を増やして、揚げ物や甘いものは控えめにしてみましょう🥗 無理のない範囲で大丈夫です。'
+  };
+  document.getElementById('adv-message').textContent = messages[mode];
+
+  // 記録の統計を表示
+  const statsEl = document.getElementById('adv-stats');
+  if (meals.length === 0) {
+    statsEl.innerHTML = '<div style="font-size:13px;font-weight:900;color:var(--od);margin-bottom:8px">📊 記録の傾向</div><p style="font-size:12px;color:var(--tl)">まだ記録がありません。食事を記録するとアドバイスが変わります！</p>';
+  } else {
+    const counts = { good:0, normal:0, bad:0, thin:0 };
+    meals.forEach(m => { if(counts[m.balance]!==undefined) counts[m.balance]++; });
+    const total = meals.length;
+    const pct = k => Math.round(counts[k]/total*100);
+    statsEl.innerHTML = `
+      <div style="font-size:13px;font-weight:900;color:var(--od);margin-bottom:10px">📊 これまでの記録 (${total}件)</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${barRow('バランス良好', counts.good, pct('good'), 'var(--gd)')}
+        ${barRow('標準', counts.normal, pct('normal'), 'var(--o)')}
+        ${barRow('高カロリー', counts.bad, pct('bad'), 'var(--p)')}
+      </div>`;
+  }
+
+  // おすすめメニューをDBから動的選出
+  renderRecommend(mode);
+}
+
+function barRow(label, count, pct, color) {
+  return `<div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t);margin-bottom:3px"><span>${label}</span><span>${count}件</span></div>
+    <div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color}"></div></div>
+  </div>`;
+}
+
+// おすすめメニューをDB(214品)から選ぶ
+function renderRecommend(mode) {
+  let pool;
+  if (mode === 'thin') {
+    // やせ気味 → しっかりエネルギー＆タンパク質。good+normalから
+    pool = DB.filter(d => (d.b==='good'||d.b==='normal') && d.prot>=15);
+  } else if (mode === 'over') {
+    // 太り気味 → 低カロリー・低脂質のgood
+    pool = DB.filter(d => d.b==='good' && d.cal<=250);
+  } else {
+    // バランス良 → goodをおすすめ
+    pool = DB.filter(d => d.b==='good');
+  }
+  if (pool.length === 0) pool = DB.filter(d => d.b==='good');
+
+  // ランダムに3品選ぶ
+  const picks = [];
+  const used = new Set();
+  while (picks.length < 3 && picks.length < pool.length) {
+    const idx = Math.floor(Math.random()*pool.length);
+    if (!used.has(idx)) { used.add(idx); picks.push(pool[idx]); }
+  }
+
+  const el = document.getElementById('adv-recommend');
+  el.innerHTML = picks.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;${i<picks.length-1?'border-bottom:1px solid #f0f0f0':''}">
+      <div style="font-size:24px">${d.e}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--t)">${d.n}</div>
+        <div style="font-size:11px;color:var(--tl);margin-top:2px">${d.cal}kcal ・ P${d.prot}g</div>
+      </div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--gd);flex-shrink:0"></div>
+    </div>`).join('');
+}
+
+// ===== 修正済み体型変化ロジック =====
+function calcNewStage(s, b) {
+  if (b === 'good') {
+    if (s <= 4) return Math.min(s + 1, 5); // やせ気味なら改善（+1）
+    if (s === 5) return 5;                  // ベストは維持
+    if (s >= 6) return s - 1;              // 太り気味なら改善（-1）
+  }
+  if (b === 'normal') return s;             // 変化なし
+  if (b === 'bad') return Math.min(s + 1, 9); // 必ず+1（上限9）★ここが修正点
+  if (b === 'thin') return Math.max(s - 1, 1);
+  return s;
+}
+
+function updateAvatar(ns, os) {
+  currentStage = ns;
+  document.getElementById('chara-img').src = getAvatarSrc(ns);
+  document.getElementById('stage-badge').textContent = 'Stage ' + ns;
+
+  if (ns !== os) {
+    const eff = document.getElementById('change-effect');
+    eff.textContent = ns > os ? '😰' : '✨';
+    eff.style.display = 'block';
+    setTimeout(() => eff.style.display = 'none', 1200);
+  }
+
+  const msgs = {
+    3: 'もっとしっかり食べよう！',
+    4: '少し食事が少ないかも…',
+    5: 'バランス最高✨今日も元気♪',
+    6: 'ちょっと食べすぎかも…💦',
+    7: '食事を見直してみよう💦',
+    8: '野菜中心にしてみよう！',
+    9: '本気で食生活を改善しよう！',
+  };
+  const key = Math.min(Math.max(ns, 3), 9);
+  document.getElementById('speech').textContent = msgs[key] || msgs[5];
+  updateDebug();
+}
+
+// ===== 料理検索 =====
+function srch(q) {
+  if (!q) return [];
+  const lq = q.toLowerCase().replace(/\s/g, '');
+  return DB.map(d => {
+    const ln = d.n.toLowerCase().replace(/\s/g, '');
+    let s = 0;
+    if (ln === lq) s = 100;
+    else if (ln.startsWith(lq)) s = 80;
+    else if (ln.includes(lq)) s = 60;
+    else if (lq.includes(ln) && ln.length > 1) s = 40;
+    else { let m = 0; for (let i = 0; i < lq.length - 1; i++) if (ln.includes(lq.slice(i, i + 2))) m++; s = m * 8; }
+    return { ...d, s };
+  }).filter(d => d.s > 0).sort((a, b) => b.s - a.s).slice(0, 6);
+}
+
+function onIn() {
+  const v = document.getElementById('di').value.trim();
+  document.getElementById('anabtn').disabled = v.length < 1;
+  document.getElementById('rbox').classList.remove('show');
+  document.getElementById('nfbox').classList.remove('show');
+  document.getElementById('recbtn').style.display = 'none';
+  lastResult = null;
+  const res = srch(v);
+  const sl = document.getElementById('sl');
+  if (v.length >= 1 && res.length) {
+    sl.innerHTML = res.map(d =>
+      `<div class="si" onclick="pick('${d.n.replace(/'/g, "\\'")}')">
+        <span style="font-size:18px;flex-shrink:0">${d.e}</span>
+        <span style="flex:1;font-weight:500;color:var(--t)">${d.n}</span>
+        <span style="font-size:10px;padding:2px 6px;border-radius:8px;font-weight:700;background:${d.b==='bad'?'#FFF3E0':d.b==='good'?'#F1F8E9':'#f0f0f0'};color:${d.b==='bad'?'#E65100':d.b==='good'?'#2E7D32':'#888'}">${d.b==='bad'?'注意':d.b==='good'?'◎':'普通'}</span>
+      </div>`
+    ).join('');
+    sl.classList.add('show');
+  } else sl.classList.remove('show');
+  const best = res[0];
+  if (best && best.s >= 40) { const p = document.getElementById('ps'); p.innerHTML = best.e; p.className = 'ps has'; }
+}
+
+function pick(name) {
+  document.getElementById('di').value = name;
+  document.getElementById('sl').classList.remove('show');
+  document.getElementById('anabtn').disabled = false;
+  onIn(); analyze();
+}
+
+function onKey(e) {
+  if (e.key === 'Enter') { document.getElementById('sl').classList.remove('show'); analyze(); }
+  if (e.key === 'Escape') document.getElementById('sl').classList.remove('show');
+}
+
+function analyze() {
+  const v = document.getElementById('di').value.trim();
+  const m = parseFloat(document.getElementById('am').value);
+  document.getElementById('sl').classList.remove('show');
+  const res = srch(v);
+  if (!res.length || res[0].s < 15) {
+    document.getElementById('nfbox').classList.add('show');
+    document.getElementById('rbox').classList.remove('show');
+    document.getElementById('recbtn').style.display = 'none';
+    return;
+  }
+  const d = res[0];
+  const cal = Math.round(d.cal * m);
+  const prot = Math.round(d.prot * m * 10) / 10;
+  const fat = Math.round(d.fat * m * 10) / 10;
+  const carb = Math.round(d.carb * m * 10) / 10;
+  lastResult = { name: d.n, emoji: d.e, cal, prot, fat, carb, balance: d.b, advice: d.a, timing: document.getElementById('timing').value };
+
+  document.getElementById('demoji').textContent = d.e;
+  document.getElementById('dname').textContent = d.n;
+  document.getElementById('r-cal').textContent = cal;
+  document.getElementById('r-prot').textContent = prot;
+  document.getElementById('r-fat').textContent = fat;
+  document.getElementById('r-carb').textContent = carb;
+
+  const sc = (cid, tid, vid, tag, val, unit) => {
+    document.getElementById(cid).className = 'ncard ' + tag.c;
+    document.getElementById(tid).textContent = tag.t;
+    document.getElementById(vid).textContent = val + ' ' + unit;
+  };
+  sc('nc-cal','nt-cal','nv-cal', cal>700?{c:'high',t:'やや高め'}:cal<300?{c:'std',t:'やや低め'}:{c:'good',t:'良好'}, cal,'kcal');
+  sc('nc-prot','nt-prot','nv-prot', prot>=20?{c:'good',t:'良好'}:{c:'std',t:'標準'}, prot,'g');
+  sc('nc-fat','nt-fat','nv-fat', fat>30?{c:'high',t:'やや高め'}:{c:'std',t:'標準'}, fat,'g');
+  sc('nc-carb','nt-carb','nv-carb', carb>80?{c:'high',t:'やや高め'}:{c:'good',t:'良好'}, carb,'g');
+
+  document.getElementById('adv-text').textContent = d.a;
+  document.getElementById('ps').innerHTML = d.e;
+  document.getElementById('ps').className = 'ps has';
+  document.getElementById('nfbox').classList.remove('show');
+  document.getElementById('rbox').classList.add('show');
+  document.getElementById('recbtn').style.display = 'block';document.getElementById('ba-section').style.display='none';
+  updateDebug();
+}
+
+function reA() { if (lastResult) analyze(); }
+
+function submitRecord() {
+  if (!lastResult) return;
+  const os = currentStage;
+  const ns = calcNewStage(currentStage, lastResult.balance);
+
+  meals.push({ ...lastResult, date: new Date().toLocaleDateString('ja-JP') });
+
+  // Before/After画像セット
+  document.getElementById('ba-before').src = getAvatarSrc(os);
+  document.getElementById('ba-after').src = getAvatarSrc(ns);
+
+  // 変化通知
+  const cn = document.getElementById('cn');
+  if (ns > os) {
+    document.getElementById('cn-emoji').textContent = '😰';
+    document.getElementById('cn-title').textContent = `体型が変化… (Stage ${os}→${ns})`;
+    document.getElementById('cn-desc').textContent = '食べすぎかも。次の食事はバランスを意識してみよう！';
+    cn.style.borderColor = '#FFCC80';
+  } else if (ns < os) {
+    document.getElementById('cn-emoji').textContent = '✨';
+    document.getElementById('cn-title').textContent = `キャラが改善！ (Stage ${os}→${ns})`;
+    document.getElementById('cn-desc').textContent = 'バランスの良い食事でキャラが良くなりました！';
+    cn.style.borderColor = '#AED581';
+  } else {
+    document.getElementById('cn-emoji').textContent = '😊';
+    document.getElementById('cn-title').textContent = `現状維持 (Stage ${os})`;
+    document.getElementById('cn-desc').textContent = 'バランスが保たれています。この調子で続けよう♪';
+    cn.style.borderColor = '#90CAF9';
+  }
+  cn.classList.add('show');
+
+  updateHomeKcal();
+  updateAvatar(ns, os); // ← ここでcurrentStageが更新される
+
+  document.getElementById('ba-section').style.display='block';
+  document.getElementById('detp').classList.add('show');
+  document.getElementById('detarrow').textContent = '∨';
+  detOpen = true;
+  updateDebug();
+}
+
+function goHome() { showScreen('home'); }
+
+function toggleDet() {
+  detOpen = !detOpen;
+  document.getElementById('detp').classList.toggle('show', detOpen);
+  document.getElementById('detarrow').textContent = detOpen ? '∨' : '›';
+}
+
+function updateHomeKcal() {
+  document.getElementById('home-kcal').textContent = meals.reduce((a, m) => a + m.cal, 0);
+}
+
+function showScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + n).classList.add('active');
+  if (n === 'past') buildHistory();
+  if (n === 'mission') updateMission();
+  if (n === 'follow') { renderMyQR(); switchRankType('streak'); renderFriends(); switchFollowTab('rank'); }
+  if (n === 'dressup') initDressup();
+  if (n === 'advice') renderAdvice();
+}
+
+function buildHistory() {
+  const list = document.getElementById('hist-list');
+  if (!meals.length) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--tl);font-size:13px">まだ記録がありません</div>'; return; }
+  list.innerHTML = [...meals].reverse().slice(0, 20).map(m =>
+    `<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0;gap:10px;background:white">
+      <span style="font-size:11px;color:var(--tl);font-weight:700;min-width:55px">${m.date} ${m.timing === 'breakfast' ? '朝' : m.timing === 'lunch' ? '昼' : m.timing === 'dinner' ? '夜' : '間'}</span>
+      <span style="font-size:18px">${m.emoji}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--t);flex:1">${m.name}</span>
+      <span style="font-size:13px;font-weight:900;color:var(--od)">${m.cal}kcal</span>
+    </div>`
+  ).join('');
+}
+
+function updateMission() {
+  const days = new Set(meals.map(m => m.date)).size;
+  document.getElementById('mf7').style.width = Math.min(days / 7 * 100, 100) + '%';
+  document.getElementById('mp7').textContent = days + '/7';
+}
+
+function switchTab(t) {
+  document.getElementById('md').style.display = t === 'daily' ? 'block' : 'none';
+  document.getElementById('mw').style.display = t === 'weekly' ? 'block' : 'none';
+  document.getElementById('tab-d').style.background = t === 'daily' ? 'var(--g)' : 'white';
+  document.getElementById('tab-d').style.color = t === 'daily' ? 'white' : 'var(--gd)';
+  document.getElementById('tab-w').style.background = t === 'weekly' ? 'var(--g)' : 'white';
+  document.getElementById('tab-w').style.color = t === 'weekly' ? 'white' : 'var(--gd)';
+}
+
+function resetAll() {
+  currentStage = 5; meals = []; lastResult = null; detOpen = false;
+  updateAvatar(5, 5);
+  document.getElementById('home-kcal').textContent = '0';
+  document.getElementById('speech').textContent = '今日も記録しよう！';
+  document.getElementById('di').value = '';
+  document.getElementById('rbox').classList.remove('show');
+  document.getElementById('detp').classList.remove('show');
+  document.getElementById('cn').classList.remove('show');
+  document.getElementById('recbtn').style.display = 'none';
+  showScreen('home');
+  updateDebug();
+}
+
+document.addEventListener('click', e => { if (!e.target.closest('.sw')) document.getElementById('sl').classList.remove('show'); });
+updateDebug();
+
+// 初期表示
+window.addEventListener('load', function() {
+  drawNoBG(getAvatarSrc(5), document.getElementById('chara-canvas'), 220, 260);
+});
+</script></body></html>
