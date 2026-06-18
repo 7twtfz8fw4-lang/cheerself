@@ -1263,7 +1263,25 @@ function submitRecord() {
   updateDebug();
 }
 
-function goHome() { showScreen('home'); }
+function resetRecord() {
+  // 入力欄を初期状態に戻す（記録データ meals は消さない）
+  lastResult = null;
+  const di = document.getElementById('di'); if (di) di.value = '';
+  const am = document.getElementById('am'); if (am) am.value = '1.0';
+  const tm = document.getElementById('timing'); if (tm) tm.value = 'breakfast';
+  const anabtn = document.getElementById('anabtn'); if (anabtn) anabtn.disabled = true;
+  document.getElementById('sl').classList.remove('show');
+  document.getElementById('rbox').classList.remove('show');
+  document.getElementById('nfbox').classList.remove('show');
+  document.getElementById('cn').classList.remove('show');
+  document.getElementById('detp').classList.remove('show');
+  document.getElementById('recbtn').style.display = 'none';
+  const ba = document.getElementById('ba-section'); if (ba) ba.style.display = 'none';
+  const ps = document.getElementById('ps'); if (ps) { ps.innerHTML = ''; ps.className = 'ps'; }
+  detOpen = false;
+}
+
+function goHome() { resetRecord(); showScreen('home'); }
 
 function toggleDet() {
   detOpen = !detOpen;
