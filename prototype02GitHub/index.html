@@ -1257,19 +1257,22 @@ function showRecordDone(emoji, msg) {
   if (!p) {
     p = document.createElement('div');
     p.id = 'rec-done';
-    p.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);background:white;color:var(--t);padding:28px 32px;border-radius:24px;font-family:inherit;text-align:center;z-index:10000;box-shadow:0 12px 40px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;max-width:80%';
+    p.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);background:white;color:var(--t);padding:28px 32px;border-radius:24px;font-family:inherit;text-align:center;z-index:10000;box-shadow:0 12px 40px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;max-width:80%;pointer-events:none';
     document.body.appendChild(p);
   }
   p.innerHTML =
     '<div style="font-size:48px;margin-bottom:8px">' + emoji + '</div>' +
     '<div style="font-size:18px;font-weight:900;color:var(--gd);margin-bottom:6px">✅ 記録しました！</div>' +
     '<div style="font-size:13px;font-weight:700;color:var(--tl);line-height:1.5">' + msg + '</div>';
-  // フェードイン
+  // 表示
+  p.style.display = 'block';
   requestAnimationFrame(() => { p.style.opacity = '1'; p.style.transform = 'translate(-50%,-50%) scale(1)'; });
   clearTimeout(p._timer);
   p._timer = setTimeout(() => {
     p.style.opacity = '0';
     p.style.transform = 'translate(-50%,-50%) scale(0.9)';
+    // フェードアウト後に完全に隠して、入力欄を塞がないようにする
+    setTimeout(() => { p.style.display = 'none'; }, 300);
   }, 1500);
 }
 
