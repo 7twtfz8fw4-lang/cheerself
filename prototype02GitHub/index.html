@@ -312,7 +312,6 @@ body{font-family:'Noto Sans JP',sans-serif;background:#e8e0d8;display:flex;justi
     </div>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button id="recbtn" style="display:none;flex:1;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:12px;padding:14px;color:white;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.4)" onclick="submitRecord()">✅ この内容で記録する</button>
-      <button style="background:#f0f0f0;border:none;border-radius:12px;padding:14px 18px;color:var(--tl);font-family:inherit;font-size:18px;font-weight:900;cursor:pointer" onclick="showScreen('home')">✕</button>
     </div>
   </div>
 </div>
@@ -1143,6 +1142,7 @@ function srch(q) {
 
 function onIn() {
   const v = document.getElementById('di').value.trim();
+  document.getElementById('anabtn').style.display = 'flex';
   document.getElementById('anabtn').disabled = v.length < 1;
   document.getElementById('rbox').classList.remove('show');
   document.getElementById('nfbox').classList.remove('show');
@@ -1160,19 +1160,22 @@ function onIn() {
     ).join('');
     sl.classList.add('show');
   } else sl.classList.remove('show');
-  const best = res[0];
-  if (best && best.s >= 40) { const p = document.getElementById('ps'); p.innerHTML = best.e; p.className = 'ps has'; }
 }
 
 function pick(name) {
   document.getElementById('di').value = name;
   document.getElementById('sl').classList.remove('show');
+  document.getElementById('anabtn').style.display = 'flex';
   document.getElementById('anabtn').disabled = false;
-  onIn(); analyze();
+  // 自動分析はせず、結果表示はリセットしておく（ユーザーがボタンを押して分析する）
+  document.getElementById('rbox').classList.remove('show');
+  document.getElementById('nfbox').classList.remove('show');
+  document.getElementById('recbtn').style.display = 'none';
+  lastResult = null;
 }
 
 function onKey(e) {
-  if (e.key === 'Enter') { document.getElementById('sl').classList.remove('show'); analyze(); }
+  if (e.key === 'Enter') { document.getElementById('sl').classList.remove('show'); }
   if (e.key === 'Escape') document.getElementById('sl').classList.remove('show');
 }
 
@@ -1212,11 +1215,10 @@ function analyze() {
   sc('nc-carb','nt-carb','nv-carb', carb>80?{c:'high',t:'やや高め'}:{c:'good',t:'良好'}, carb,'g');
 
   document.getElementById('adv-text').textContent = d.a;
-  document.getElementById('ps').innerHTML = d.e;
-  document.getElementById('ps').className = 'ps has';
   document.getElementById('nfbox').classList.remove('show');
   document.getElementById('rbox').classList.add('show');
   document.getElementById('recbtn').style.display = 'block';document.getElementById('ba-section').style.display='none';
+  document.getElementById('anabtn').style.display = 'none';
   updateDebug();
 }
 
@@ -1269,7 +1271,7 @@ function resetRecord() {
   const di = document.getElementById('di'); if (di) di.value = '';
   const am = document.getElementById('am'); if (am) am.value = '1.0';
   const tm = document.getElementById('timing'); if (tm) tm.value = 'breakfast';
-  const anabtn = document.getElementById('anabtn'); if (anabtn) anabtn.disabled = true;
+  const anabtn = document.getElementById('anabtn'); if (anabtn) { anabtn.style.display = 'flex'; anabtn.disabled = true; }
   document.getElementById('sl').classList.remove('show');
   document.getElementById('rbox').classList.remove('show');
   document.getElementById('nfbox').classList.remove('show');
@@ -1277,7 +1279,7 @@ function resetRecord() {
   document.getElementById('detp').classList.remove('show');
   document.getElementById('recbtn').style.display = 'none';
   const ba = document.getElementById('ba-section'); if (ba) ba.style.display = 'none';
-  const ps = document.getElementById('ps'); if (ps) { ps.innerHTML = ''; ps.className = 'ps'; }
+  const ps = document.getElementById('ps'); if (ps) { ps.innerHTML = '<span>📷</span><span class="phint">タップして撮影</span>'; ps.className = 'ps'; }
   detOpen = false;
 }
 
