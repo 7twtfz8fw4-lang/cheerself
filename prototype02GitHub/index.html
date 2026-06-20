@@ -311,7 +311,15 @@ body{font-family:'Noto Sans JP',sans-serif;background:#e8e0d8;display:flex;justi
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button id="recbtn" style="display:none;flex:1;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:12px;padding:14px;color:white;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.4)" onclick="submitRecord()">✅ この内容で記録する</button>
+      <button id="recbtn" style="display:none;flex:1;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:12px;padding:14px;color:white;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.4)" onclick="addToMeal()">＋ この料理をリストに追加</button>
+    </div>
+
+    <!-- 追加した料理リスト -->
+    <div id="meal-list-box" style="display:none;margin-top:16px;background:#FFF7EE;border:2px solid #F0C89A;border-radius:14px;padding:14px">
+      <div style="font-size:14px;font-weight:900;color:var(--od);margin-bottom:10px">🍽 この食事に追加した料理</div>
+      <div id="meal-list"></div>
+      <div id="meal-total" style="text-align:right;font-size:13px;font-weight:700;color:var(--tl);margin-top:8px"></div>
+      <button id="finishbtn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:12px;padding:15px;color:white;font-family:inherit;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(123,196,85,0.4)" onclick="submitMeal()">✅ この食事を記録する</button>
     </div>
   </div>
 </div>
@@ -992,6 +1000,7 @@ let currentStage = 5;
 let meals = [];
 let detOpen = false;
 let lastResult = null;
+let mealItems = [];
 
 function updateDebug() {
   document.getElementById('debug').textContent =
@@ -1224,14 +1233,58 @@ function analyze() {
 
 function reA() { if (lastResult) analyze(); }
 
-function submitRecord() {
+function addToMeal() {
   if (!lastResult) return;
+  mealItems.push({ ...lastResult });
+  renderMealList();
+  resetInputOnly();
+}
+
+function renderMealList() {
+  const box = document.getElementById('meal-list-box');
+  const list = document.getElementById('meal-list');
+  if (mealItems.length === 0) {
+    box.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  box.style.display = 'block';
+  list.innerHTML = '';
+  let totalCal = 0;
+  mealItems.forEach((it, i) => {
+    totalCal += it.cal;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:white;border-radius:10px;padding:10px 12px;margin-bottom:8px';
+    row.innerHTML =
+      '<span style="font-size:14px;font-weight:700;color:var(--t)">' + it.emoji + ' ' + it.name + '</span>' +
+      '<span style="display:flex;align-items:center;gap:10px">' +
+        '<span style="font-size:13px;color:var(--tl)">' + it.cal + ' kcal</span>' +
+        '<button onclick="removeMealItem(' + i + ')" style="background:#f0f0f0;border:none;border-radius:8px;width:28px;height:28px;font-size:14px;color:var(--tl);cursor:pointer">✕</button>' +
+      '</span>';
+    list.appendChild(row);
+  });
+  document.getElementById('meal-total').textContent = '合計 ' + totalCal + ' kcal（' + mealItems.length + '品）';
+}
+
+function removeMealItem(i) {
+  mealItems.splice(i, 1);
+  renderMealList();
+}
+
+function submitMeal() {
+  if (mealItems.length === 0) return;
+  const totalCal = mealItems.reduce((s, it) => s + it.cal, 0);
+  let balance;
+  if (totalCal > 1000) balance = 'bad';
+  else if (totalCal < 400) balance = 'thin';
+  else if (totalCal >= 600 && totalCal <= 900) balance = 'good';
+  else balance = 'normal';
+
   const os = currentStage;
-  const ns = calcNewStage(currentStage, lastResult.balance);
+  const ns = calcNewStage(currentStage, balance);
 
-  meals.push({ ...lastResult, date: new Date().toLocaleDateString('ja-JP') });
+  meals.push({ name: mealItems.map(m => m.name).join('、'), emoji: mealItems[0].emoji, cal: totalCal, balance, date: new Date().toLocaleDateString('ja-JP'), timing: mealItems[0].timing });
 
-  // 変化メッセージを決める
   let msg, emoji;
   if (ns > os) {
     emoji = '😰'; msg = '食べすぎかも…次はバランスを意識しよう！';
@@ -1241,13 +1294,12 @@ function submitRecord() {
     emoji = '😊'; msg = 'バランスキープ！この調子で続けよう♪';
   }
 
-  // データ・アバターを更新
   updateHomeKcal();
-  updateAvatar(ns, os); // ← ここでcurrentStageが更新される
+  updateAvatar(ns, os);
   updateDebug();
 
-  // 記録完了ポップアップを表示してから自動でホームに戻る
   showRecordDone(emoji, msg);
+  mealItems = [];
   resetRecord();
   setTimeout(() => { showScreen('home'); }, 1600);
 }
@@ -1276,22 +1328,27 @@ function showRecordDone(emoji, msg) {
   }, 1500);
 }
 
-function resetRecord() {
-  // 入力欄を初期状態に戻す（記録データ meals は消さない）
+function resetInputOnly() {
   lastResult = null;
   const di = document.getElementById('di'); if (di) di.value = '';
   const am = document.getElementById('am'); if (am) am.value = '1.0';
-  const tm = document.getElementById('timing'); if (tm) tm.value = 'breakfast';
   const anabtn = document.getElementById('anabtn'); if (anabtn) { anabtn.style.display = 'flex'; anabtn.disabled = true; }
   document.getElementById('sl').classList.remove('show');
   document.getElementById('rbox').classList.remove('show');
   document.getElementById('nfbox').classList.remove('show');
-  document.getElementById('cn').classList.remove('show');
   document.getElementById('detp').classList.remove('show');
   document.getElementById('recbtn').style.display = 'none';
-  const ba = document.getElementById('ba-section'); if (ba) ba.style.display = 'none';
   const ps = document.getElementById('ps'); if (ps) { ps.innerHTML = '<span>📷</span><span class="phint">タップして撮影</span>'; ps.className = 'ps'; }
   detOpen = false;
+}
+
+function resetRecord() {
+  resetInputOnly();
+  const tm = document.getElementById('timing'); if (tm) tm.value = 'breakfast';
+  document.getElementById('cn').classList.remove('show');
+  const ba = document.getElementById('ba-section'); if (ba) ba.style.display = 'none';
+  mealItems = [];
+  renderMealList();
 }
 
 function goHome() { resetRecord(); showScreen('home'); }
@@ -1322,8 +1379,7 @@ function buildHistory() {
   list.innerHTML = [...meals].reverse().slice(0, 20).map(m =>
     `<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0;gap:10px;background:white">
       <span style="font-size:11px;color:var(--tl);font-weight:700;min-width:55px">${m.date} ${m.timing === 'breakfast' ? '朝' : m.timing === 'lunch' ? '昼' : m.timing === 'dinner' ? '夜' : '間'}</span>
-      <span style="font-size:18px">${m.emoji}</span>
-      <span style="font-size:13px;font-weight:700;color:var(--t);flex:1">${m.name}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--t);flex:1;line-height:1.4">${m.name}</span>
       <span style="font-size:13px;font-weight:900;color:var(--od)">${m.cal}kcal</span>
     </div>`
   ).join('');
